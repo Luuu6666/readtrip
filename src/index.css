@@ -1,0 +1,460 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 阅迹ReadTrip - 温暖文艺设计系统 */
+/* 灵感：复古纸张、旧书卷、手绘地图 */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+@layer base {
+  :root {
+    /* 核心色板 - 温暖复古色调 */
+    --background: 42 35% 95%;           /* 米白色背景 */
+    --foreground: 28 35% 18%;           /* 深棕色文字 */
+
+    --card: 40 30% 97%;                 /* 浅米色卡片 */
+    --card-foreground: 28 35% 18%;
+
+    --popover: 40 30% 98%;
+    --popover-foreground: 28 35% 18%;
+
+    --primary: 28 55% 38%;              /* 暖棕色主色 */
+    --primary-foreground: 40 30% 97%;
+
+    --secondary: 35 25% 88%;            /* 淡杏色辅助色 */
+    --secondary-foreground: 28 35% 25%;
+
+    --muted: 38 20% 92%;                /* 柔和灰棕 */
+    --muted-foreground: 28 15% 45%;
+
+    --accent: 25 60% 55%;               /* 陶土橙点缀色 */
+    --accent-foreground: 40 30% 97%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 40 30% 97%;
+
+    --border: 35 20% 85%;
+    --input: 35 20% 85%;
+    --ring: 28 55% 38%;
+
+    --radius: 0.625rem;
+
+    /* 自定义扩展色 */
+    --paper: 42 40% 92%;                /* 纸张色 */
+    --paper-dark: 38 30% 85%;           /* 深纸张色 */
+    --ink: 28 45% 22%;                  /* 墨水色 */
+    --sepia: 30 35% 75%;                /* 怀旧色 */
+    --gold: 38 70% 50%;                 /* 金色点缀 */
+    --ocean: 200 45% 45%;               /* 海洋蓝 */
+    --forest: 140 35% 40%;              /* 森林绿 */
+    --desert: 35 50% 60%;               /* 沙漠色 */
+    
+    /* 地图相关颜色 - 复古米白风格 */
+    --map-land: 40 35% 90%;             /* 未读国家 - 米白色 */
+    --map-visited: 28 45% 55%;          /* 已读国家 - 暖棕色 */
+    --map-hover: 32 50% 65%;            /* 悬停状态 */
+    --map-water: 38 30% 85%;            /* 海洋 - 浅米色 */
+    --map-border: 30 25% 70%;           /* 国家边界 - 柔和棕色 */
+
+    /* 渐变 */
+    --gradient-paper: linear-gradient(135deg, hsl(42 40% 94%) 0%, hsl(38 30% 90%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(28 55% 38%) 0%, hsl(25 60% 50%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(42 35% 96%) 0%, hsl(38 30% 92%) 50%, hsl(35 25% 88%) 100%);
+
+    /* 阴影 */
+    --shadow-soft: 0 4px 20px -4px hsl(28 35% 18% / 0.08);
+    --shadow-card: 0 8px 32px -8px hsl(28 35% 18% / 0.12);
+    --shadow-elevated: 0 16px 48px -12px hsl(28 35% 18% / 0.18);
+
+    /* Sidebar */
+    --sidebar-background: 42 35% 96%;
+    --sidebar-foreground: 28 35% 25%;
+    --sidebar-primary: 28 55% 38%;
+    --sidebar-primary-foreground: 40 30% 97%;
+    --sidebar-accent: 35 25% 90%;
+    --sidebar-accent-foreground: 28 35% 25%;
+    --sidebar-border: 35 20% 88%;
+    --sidebar-ring: 28 55% 38%;
+  }
+
+  .dark {
+    --background: 25 25% 10%;
+    --foreground: 38 25% 90%;
+
+    --card: 25 25% 12%;
+    --card-foreground: 38 25% 90%;
+
+    --popover: 25 25% 12%;
+    --popover-foreground: 38 25% 90%;
+
+    --primary: 32 55% 55%;
+    --primary-foreground: 25 25% 10%;
+
+    --secondary: 28 20% 20%;
+    --secondary-foreground: 38 25% 90%;
+
+    --muted: 28 15% 18%;
+    --muted-foreground: 35 15% 60%;
+
+    --accent: 30 50% 50%;
+    --accent-foreground: 38 25% 95%;
+
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 38 25% 95%;
+
+    --border: 28 15% 22%;
+    --input: 28 15% 22%;
+    --ring: 32 55% 55%;
+
+    --paper: 25 20% 14%;
+    --paper-dark: 25 20% 18%;
+    --ink: 38 25% 85%;
+    --sepia: 30 20% 35%;
+    --gold: 38 60% 45%;
+    --ocean: 200 35% 35%;
+    --forest: 140 25% 30%;
+    --desert: 35 35% 45%;
+    
+    --map-land: 28 15% 25%;
+    --map-visited: 32 45% 45%;
+    --map-hover: 30 50% 55%;
+    --map-water: 200 25% 18%;
+    --map-border: 28 15% 30%;
+
+    --gradient-paper: linear-gradient(135deg, hsl(25 20% 12%) 0%, hsl(25 20% 16%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(32 55% 50%) 0%, hsl(30 50% 55%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(25 25% 8%) 0%, hsl(25 25% 12%) 50%, hsl(28 20% 15%) 100%);
+
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 8px 32px -8px hsl(0 0% 0% / 0.4);
+    --shadow-elevated: 0 16px 48px -12px hsl(0 0% 0% / 0.5);
+
+    --sidebar-background: 25 25% 10%;
+    --sidebar-foreground: 38 25% 85%;
+    --sidebar-primary: 32 55% 55%;
+    --sidebar-primary-foreground: 25 25% 10%;
+    --sidebar-accent: 28 15% 18%;
+    --sidebar-accent-foreground: 38 25% 85%;
+    --sidebar-border: 28 15% 22%;
+    --sidebar-ring: 32 55% 55%;
+  }
+
+  /* 黑金主题 - 奢华高端风格 */
+  .theme-dark-gold {
+    --background: 240 10% 8%;             /* 深黑色背景 */
+    --foreground: 45 80% 85%;             /* 金色文字 */
+
+    --card: 240 10% 12%;                  /* 深灰卡片 */
+    --card-foreground: 45 70% 80%;
+
+    --popover: 240 10% 10%;
+    --popover-foreground: 45 70% 85%;
+
+    --primary: 45 85% 55%;                /* 亮金色主色 */
+    --primary-foreground: 240 10% 8%;
+
+    --secondary: 240 8% 18%;              /* 深灰辅助色 */
+    --secondary-foreground: 45 60% 75%;
+
+    --muted: 240 8% 15%;                  /* 柔和深灰 */
+    --muted-foreground: 45 30% 55%;
+
+    --accent: 35 90% 50%;                 /* 橙金点缀色 */
+    --accent-foreground: 240 10% 8%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 45 80% 90%;
+
+    --border: 45 30% 25%;                 /* 金色边框 */
+    --input: 240 8% 20%;
+    --ring: 45 85% 55%;
+
+    --radius: 0.625rem;
+
+    /* 自定义扩展色 - 黑金 */
+    --paper: 240 10% 10%;
+    --paper-dark: 240 10% 6%;
+    --ink: 45 80% 85%;
+    --sepia: 45 40% 35%;
+    --gold: 45 85% 55%;
+    --ocean: 220 30% 25%;
+    --forest: 160 30% 25%;
+    --desert: 35 50% 40%;
+    
+    /* 地图相关颜色 - 黑金风格 */
+    --map-land: 240 8% 18%;               /* 未读国家 - 深灰 */
+    --map-visited: 45 80% 50%;            /* 已读国家 - 金色 */
+    --map-hover: 45 70% 60%;              /* 悬停状态 - 亮金 */
+    --map-water: 240 10% 12%;             /* 海洋 - 深黑 */
+    --map-border: 45 40% 30%;             /* 国家边界 - 暗金 */
+
+    /* 渐变 - 黑金 */
+    --gradient-paper: linear-gradient(135deg, hsl(240 10% 10%) 0%, hsl(240 10% 14%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(45 85% 50%) 0%, hsl(35 90% 55%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(240 10% 6%) 0%, hsl(240 10% 10%) 50%, hsl(240 8% 14%) 100%);
+
+    /* 阴影 - 黑金 */
+    --shadow-soft: 0 4px 20px -4px hsl(45 85% 55% / 0.1);
+    --shadow-card: 0 8px 32px -8px hsl(45 85% 55% / 0.15);
+    --shadow-elevated: 0 16px 48px -12px hsl(45 85% 55% / 0.2);
+
+    /* Sidebar - 黑金 */
+    --sidebar-background: 240 10% 8%;
+    --sidebar-foreground: 45 70% 75%;
+    --sidebar-primary: 45 85% 55%;
+    --sidebar-primary-foreground: 240 10% 8%;
+    --sidebar-accent: 240 8% 15%;
+    --sidebar-accent-foreground: 45 70% 75%;
+    --sidebar-border: 45 30% 25%;
+    --sidebar-ring: 45 85% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', 'Noto Serif SC', system-ui, sans-serif;
+  }
+
+  /* 标题字体 - Playfair Display 衬线体 */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', 'Noto Serif SC', Georgia, serif;
+    @apply font-medium tracking-tight;
+  }
+
+  /* 纸张纹理背景 */
+  .paper-texture {
+    background-image: 
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"),
+      var(--gradient-paper);
+    background-blend-mode: overlay;
+  }
+
+  /* 地图容器 */
+  .map-container {
+    background: var(--gradient-hero);
+  }
+
+  /* 复古地图背景 - 温暖风格 */
+  .vintage-map-bg {
+    background-color: hsl(var(--map-water));
+    background-image: 
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a08060' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-blend-mode: overlay, normal;
+  }
+
+  /* 黑金主题地图背景 */
+  .theme-dark-gold .vintage-map-bg {
+    background-color: hsl(240 10% 12%);
+    background-image: 
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-blend-mode: overlay, normal;
+  }
+}
+
+@layer components {
+  /* 玻璃态面板 */
+  .glass-panel {
+    @apply backdrop-blur-md border border-border/50;
+    background: hsl(var(--card) / 0.85);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* 温暖卡片 */
+  .warm-card {
+    @apply rounded-lg border border-border/60;
+    background: hsl(var(--card));
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .warm-card:hover {
+    box-shadow: var(--shadow-card);
+    transform: translateY(-2px);
+  }
+
+  /* 书籍封面容器 */
+  .book-cover {
+    @apply rounded-md overflow-hidden;
+    box-shadow: 
+      4px 4px 12px -4px hsl(28 35% 18% / 0.2),
+      inset 0 0 0 1px hsl(38 20% 80% / 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .book-cover:hover {
+    transform: scale(1.05) rotate(-2deg);
+    box-shadow: 
+      8px 8px 20px -6px hsl(28 35% 18% / 0.25),
+      inset 0 0 0 1px hsl(38 20% 80% / 0.4);
+  }
+
+  /* 输入框样式 */
+  .warm-input {
+    @apply w-full px-4 py-3 rounded-lg border border-border bg-card/80;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary;
+    @apply placeholder:text-muted-foreground/60;
+    transition: all 0.2s ease;
+  }
+
+  /* 主按钮 */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg;
+    @apply font-medium text-primary-foreground;
+    background: var(--gradient-warm);
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-primary:hover {
+    box-shadow: var(--shadow-card);
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+  }
+
+  /* 次级按钮 */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg;
+    @apply font-medium text-foreground bg-secondary border border-border/50;
+    transition: all 0.2s ease;
+  }
+
+  .btn-secondary:hover {
+    @apply bg-secondary/80;
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* 幽灵按钮 */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg;
+    @apply font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50;
+    transition: all 0.2s ease;
+  }
+
+  /* 图标按钮 */
+  .btn-icon {
+    @apply inline-flex items-center justify-center w-10 h-10 rounded-lg;
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted/50;
+    transition: all 0.2s ease;
+  }
+
+  /* 标签 */
+  .tag {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm;
+    @apply bg-secondary text-secondary-foreground border border-border/30;
+  }
+
+  /* 分隔线 */
+  .divider {
+    @apply h-px w-full;
+    background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+  }
+}
+
+@layer utilities {
+  /* 文字渐变 */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-warm);
+  }
+
+  /* 隐藏滚动条 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 优雅滚动条 */
+  .scrollbar-elegant {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .scrollbar-elegant::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-elegant::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-elegant::-webkit-scrollbar-thumb {
+    @apply rounded-full;
+    background: hsl(var(--border));
+  }
+
+  .scrollbar-elegant::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.3);
+  }
+
+  /* 动画延迟工具类 */
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+}
+
+/* 自定义动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+.animate-slideUp { animation: slideUp 0.6s ease-out; }
+.animate-scaleIn { animation: scaleIn 0.4s ease-out; }
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }

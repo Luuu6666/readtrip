@@ -1,0 +1,4 @@
+project_id = "sadwpheednlwlhegsqbp"
+
+[functions.match-book]
+verify_jwt = false
