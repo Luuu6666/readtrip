@@ -5,7 +5,7 @@
 /* 阅迹ReadTrip - 温暖文艺设计系统 */
 /* 灵感：复古纸张、旧书卷、手绘地图 */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Merriweather:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
 
 @layer base {
   :root {
@@ -209,6 +209,73 @@
     --sidebar-border: 45 30% 25%;
     --sidebar-ring: 45 85% 55%;
   }
+
+  /* 复古羊皮主题 - 羊皮纸航海地图风格 */
+  .theme-parchment {
+    /* 羊皮纸底色 #F2E8D6、深棕 #8B5A2B、中棕 #A67C52、浅棕 #D4B893、墨黑 #1A1A1A */
+    --background: 39 45% 89%;             /* 羊皮纸底色 - 页面背景、陆地底色 */
+    --foreground: 0 0% 10%;               /* 墨黑 - 正文文字、图标主色 */
+
+    --card: 39 42% 92%;                   /* 羊皮纸底色 - 卡片 */
+    --card-foreground: 0 0% 10%;
+
+    --popover: 39 42% 92%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 28 52% 35%;                /* 深棕主色 #8B5A2B - 地图轮廓、标题、边框 */
+    --primary-foreground: 39 45% 95%;
+
+    --secondary: 33 44% 72%;              /* 浅棕点缀色 #D4B893 - 按钮背景、高亮区域 */
+    --secondary-foreground: 28 52% 30%;
+
+    --muted: 39 35% 88%;                  /* 柔和羊皮色 */
+    --muted-foreground: 28 38% 48%;       /* 中棕辅助色 #A67C52 - 次要文字 */
+
+    --accent: 28 38% 48%;                 /* 中棕辅助色 */
+    --accent-foreground: 39 45% 95%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 39 45% 95%;
+
+    --border: 28 52% 35%;                 /* 深棕边框 */
+    --input: 28 38% 75%;
+    --ring: 28 52% 35%;
+
+    --radius: 0.5rem;                     /* 4px 按钮圆角，卡片 8px 在组件内 */
+
+    --paper: 39 45% 89%;
+    --paper-dark: 39 40% 82%;
+    --ink: 0 0% 10%;
+    --sepia: 28 38% 48%;
+    --gold: 28 52% 35%;
+    --ocean: 200 45% 45%;
+    --forest: 140 35% 40%;
+    --desert: 35 50% 60%;
+
+    /* 地图 - 复古羊皮 */
+    --map-land: 39 42% 90%;               /* 未读国家 - 羊皮纸底色 */
+    --map-visited: 28 52% 42%;            /* 已读国家 - 深棕 */
+    --map-hover: 28 45% 50%;
+    --map-water: 39 35% 85%;              /* 海洋 - 浅羊皮色 */
+    --map-border: 28 52% 35%;              /* 国家边界 - 深棕 */
+
+    --gradient-paper: linear-gradient(135deg, hsl(39 45% 92%) 0%, hsl(39 40% 88%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(28 52% 35%) 0%, hsl(28 38% 48%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(39 45% 90%) 0%, hsl(39 40% 88%) 50%, hsl(39 35% 85%) 100%);
+
+    --shadow-soft: 0 2px 4px rgba(139, 90, 43, 0.1);
+    --shadow-card: 0 4px 8px rgba(139, 90, 43, 0.15);
+    --shadow-elevated: 0 4px 8px rgba(139, 90, 43, 0.2);
+
+    --sidebar-background: 39 45% 91%;
+    --sidebar-foreground: 0 0% 12%;
+    --sidebar-primary: 28 52% 35%;
+    --sidebar-primary-foreground: 39 45% 95%;
+    --sidebar-accent: 33 44% 85%;
+    --sidebar-accent-foreground: 28 52% 30%;
+    --sidebar-border: 28 38% 70%;
+    --sidebar-ring: 28 52% 35%;
+  }
 }
 
 @layer base {
@@ -260,6 +327,94 @@
       url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E"),
       url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     background-blend-mode: overlay, normal;
+  }
+
+  /* 复古羊皮主题地图背景色（底层） */
+  .theme-parchment .vintage-map-bg {
+    background-color: #F2E8D6;
+    background-image:
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238B5A2B' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-blend-mode: normal;
+  }
+
+  /* 纸张肌理叠加层：盖在地图最上层，陆地和海洋都能看到肌理 */
+  .theme-parchment .map-wrapper {
+    position: relative;
+  }
+  .theme-parchment .map-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='fine'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23fine)' opacity='0.055'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='fiber'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.08' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23fiber)' opacity='0.07'/%3E%3C/svg%3E");
+    background-blend-mode: overlay;
+    background-size: auto, auto;
+  }
+
+  /* 复古羊皮主题 - 正文 Lora、副标题 Merriweather */
+  .theme-parchment body {
+    font-family: 'Lora', 'Noto Serif SC', Georgia, serif;
+  }
+
+  .theme-parchment h1, .theme-parchment h2, .theme-parchment h3 {
+    font-family: 'Playfair Display', 'Merriweather', 'Noto Serif SC', Georgia, serif;
+  }
+
+  /* 温暖、黑金与羊皮模式统一字体：正文 Lora，标题 Playfair Display */
+  .theme-warm body,
+  .theme-dark-gold body {
+    font-family: 'Lora', 'Noto Serif SC', Georgia, serif;
+  }
+  .theme-warm h1, .theme-warm h2, .theme-warm h3,
+  .theme-dark-gold h1, .theme-dark-gold h2, .theme-dark-gold h3 {
+    font-family: 'Playfair Display', 'Merriweather', 'Noto Serif SC', Georgia, serif;
+  }
+
+  /* 复古羊皮 - 手绘风格分隔线（含 .divider 与 .divider-handdrawn） */
+  .theme-parchment .divider,
+  .theme-parchment .divider-handdrawn,
+  .theme-parchment hr.divider-handdrawn {
+    height: 0;
+    border: none;
+    background: transparent url("data:image/svg+xml,%3Csvg width='100%25' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 4 q 20 2 40 0 t 40 0 t 40 0 t 40 0' stroke='%238B5A2B' stroke-width='1.5' fill='none' stroke-linecap='round' opacity='0.4'/%3E%3C/svg%3E") center repeat-x;
+    background-size: 80px 8px;
+    margin: 1rem 0;
+  }
+
+  /* 复古羊皮 - 图片复古色调与羊皮纸纹理叠加 */
+  .theme-parchment img:not([role='presentation']) {
+    filter: sepia(0.15) saturate(0.9) hue-rotate(-3deg);
+    transition: filter 0.2s ease;
+  }
+  .theme-parchment img:not([role='presentation']):hover {
+    filter: sepia(0.12) saturate(0.92) hue-rotate(-2deg);
+  }
+  /* 书籍封面等图片容器 - 轻微纹理叠加 */
+  .theme-parchment .book-cover,
+  .theme-parchment [class*="country-books-group"] image {
+    filter: sepia(0.12) saturate(0.88) hue-rotate(-4deg);
+  }
+
+  /* 无障碍：全局焦点状态 - 符合 WCAG 可见焦点 */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+  }
+  .theme-parchment button:focus-visible,
+  .theme-parchment a:focus-visible,
+  .theme-parchment [role="button"]:focus-visible,
+  .theme-parchment input:focus-visible,
+  .theme-parchment select:focus-visible,
+  .theme-parchment textarea:focus-visible {
+    box-shadow: 0 0 0 2px #F2E8D6, 0 0 0 4px hsl(var(--ring));
   }
 }
 

@@ -1,14 +1,25 @@
 import React, { useRef, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Download, Plus, List, MapPin, BookMarked, Palette, Upload, RefreshCw, Trash2 } from 'lucide-react';
+import { BookOpen, Download, Plus, List, MapPin, BookMarked, Palette, Upload, RefreshCw, Trash2, ChevronDown } from 'lucide-react';
 import { WorldMap } from '@/components/WorldMap';
 import { BookInputPanel } from '@/components/BookInputPanel';
 import { RecordsList } from '@/components/RecordsList';
 import { ExportPanel } from '@/components/ExportPanel';
 import { ExcelUploadPanel } from '@/components/ExcelUploadPanel';
 import { BookDetailCard } from '@/components/BookDetailCard';
+import { ParchmentDecorations } from '@/components/ParchmentDecorations';
 import { useReadingRecords } from '@/hooks/useReadingRecords';
-import { useThemeStyle } from '@/hooks/useThemeStyle';
+import { useThemeStyle, type ThemeStyle } from '@/hooks/useThemeStyle';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { BookInfo, ReadingRecord } from '@/types/reading';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +34,7 @@ const Index = () => {
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | undefined>(undefined);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   
-  const { theme, toggleTheme, isWarm, isDarkGold } = useThemeStyle();
+  const { theme, toggleTheme, setThemeStyle, isWarm, isDarkGold, isParchment } = useThemeStyle();
 
   const {
     records,
@@ -255,82 +266,90 @@ const Index = () => {
             <div className="flex items-center gap-2 text-muted-foreground">
               <BookOpen className="w-4 h-4" />
               <span className="text-sm">
-                <span className="font-medium text-foreground">{stats.totalBooks}</span> 本书
+                已阅读 <span className="font-medium text-foreground">{stats.totalBooks}</span> 本书
               </span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="w-4 h-4" />
               <span className="text-sm">
-                <span className="font-medium text-foreground">{stats.totalCountries}</span> 个国家
+                已点亮 <span className="font-medium text-foreground">{stats.totalCountries}</span> 个国家
               </span>
             </div>
           </motion.div>
 
-          {/* 操作按钮 */}
+          {/* 操作按钮 - 仅保留「我的足迹」 */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             className="flex items-center gap-2"
           >
-            {/* 主题切换按钮 */}
-            <button
-              onClick={toggleTheme}
-              className="btn-ghost hidden sm:flex"
-              title={isDarkGold ? '切换到温暖风格' : '切换到黑金风格'}
-            >
-              <Palette className="w-4 h-4" />
-              <span>{isDarkGold ? '温暖' : '黑金'}</span>
-            </button>
-            <button
-              onClick={() => setIsExcelUploadOpen(true)}
-              className="btn-ghost hidden sm:flex"
-            >
-              <Upload className="w-4 h-4" />
-              <span>批量导入</span>
-            </button>
-            <button
-              onClick={handleUpdateCovers}
-              className="btn-ghost hidden sm:flex"
-              disabled={isUpdatingCovers || records.length === 0}
-              title="重新匹配所有书籍的封面"
-            >
-              <RefreshCw className={`w-4 h-4 ${isUpdatingCovers ? 'animate-spin' : ''}`} />
-              <span>{isUpdatingCovers ? '更新中...' : '更新封面'}</span>
-            </button>
             <button
               onClick={() => setIsListOpen(true)}
               className="btn-ghost hidden sm:flex"
+              aria-label="打开我的足迹列表"
             >
-              <List className="w-4 h-4" />
+              <List className="w-4 h-4" aria-hidden />
               <span>我的足迹</span>
-            </button>
-            <button
-              onClick={() => setIsExportOpen(true)}
-              className="btn-secondary hidden sm:flex"
-              disabled={records.length === 0}
-            >
-              <Download className="w-4 h-4" />
-              <span>导出</span>
-            </button>
-            <button
-              onClick={handleClearAll}
-              className="btn-ghost hidden sm:flex text-destructive hover:bg-destructive/10"
-              disabled={records.length === 0}
-              title="清除所有阅读记录"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>清除全部</span>
             </button>
           </motion.div>
         </div>
       </header>
+
+      {/* 左下角：风格切换、更新封面、导出（仅图标，悬停显示文字），位于聚合/展开按钮上方 */}
+      <div className="fixed bottom-24 left-4 z-20 flex flex-col-reverse gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => setIsExportOpen(true)}
+              disabled={records.length === 0}
+              className="w-12 h-12 rounded-lg bg-card/90 backdrop-blur border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-card transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="导出阅读记录"
+            >
+              <Download className="w-5 h-5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">导出</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={handleUpdateCovers}
+              disabled={isUpdatingCovers || records.length === 0}
+              className="w-12 h-12 rounded-lg bg-card/90 backdrop-blur border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-card transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={isUpdatingCovers ? '正在更新封面' : '更新封面'}
+            >
+              <RefreshCw className={`w-5 h-5 ${isUpdatingCovers ? 'animate-spin' : ''}`} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">{isUpdatingCovers ? '更新中...' : '更新封面'}</TooltipContent>
+        </Tooltip>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              title="风格切换"
+              className="w-12 h-12 rounded-lg bg-card/90 backdrop-blur border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-card transition-colors"
+              aria-label="切换系统风格"
+            >
+              <Palette className="w-5 h-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" side="right" className="min-w-[10rem]">
+            <DropdownMenuRadioGroup value={theme} onValueChange={(v) => setThemeStyle(v as ThemeStyle)}>
+              <DropdownMenuRadioItem value="warm">温暖</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="dark-gold">黑金</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="parchment">复古羊皮</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* 地图容器 */}
       <div 
         ref={mapRef}
         className="absolute inset-0 map-container"
       >
+        {isParchment && <ParchmentDecorations />}
         {!isLoading && (
           <WorldMap
             visitedCountries={visitedCountries}
@@ -372,20 +391,44 @@ const Index = () => {
         </motion.div>
       )}
 
-      {/* 底部中间 - 记录足迹按钮 */}
+      {/* 底部中间 - 记录足迹（含批量导入、清除全部） */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30">
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsInputOpen(true)}
-          className="btn-primary rounded-full px-6 py-3.5 shadow-elevated"
-        >
-          <Plus className="w-5 h-5" />
-          <span>记录足迹</span>
-        </motion.button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="btn-primary rounded-full px-6 py-3.5 shadow-elevated"
+              aria-label="记录足迹"
+            >
+              <Plus className="w-5 h-5" />
+              <span>记录足迹</span>
+              <ChevronDown className="w-4 h-4 ml-1 opacity-80" />
+            </motion.button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" side="top" className="min-w-[10rem]">
+            <DropdownMenuItem onClick={() => setIsInputOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              记录足迹
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIsExcelUploadOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              批量导入
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleClearAll}
+              disabled={records.length === 0}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              清除全部
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* 移动端统计信息 */}

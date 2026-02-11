@@ -62,7 +62,7 @@ export const RecordsList: React.FC<RecordsListProps> = ({
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-primary" />
+                  <BookOpen className="w-5 h-5 text-primary" aria-hidden />
                 </div>
                 <div>
                   <h2 className="font-serif text-lg font-medium text-foreground">
@@ -79,8 +79,9 @@ export const RecordsList: React.FC<RecordsListProps> = ({
               <button
                 onClick={onClose}
                 className="btn-icon"
+                aria-label="关闭列表"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden />
               </button>
             </div>
 
@@ -89,7 +90,7 @@ export const RecordsList: React.FC<RecordsListProps> = ({
               {filteredRecords.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full px-6">
                   <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-                    <BookOpen className="w-10 h-10 text-muted-foreground" />
+                    <BookOpen className="w-10 h-10 text-muted-foreground" aria-hidden />
                   </div>
                   <p className="text-lg font-serif text-foreground mb-2">还没有阅读记录</p>
                   <p className="text-sm text-muted-foreground text-center">
@@ -135,14 +136,14 @@ export const RecordsList: React.FC<RecordsListProps> = ({
                                 
                                 {/* 作者 */}
                                 <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
-                                  <User className="w-3.5 h-3.5" />
+                                  <User className="w-3.5 h-3.5" aria-hidden />
                                   <span>{record.book.author}</span>
                                 </div>
 
                                 {/* 类型 */}
                                 {record.book.genre && (
                                   <div className="flex items-center gap-1.5 mt-1">
-                                    <Tag className="w-3.5 h-3.5 text-muted-foreground" />
+                                    <Tag className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
                                     <span className="tag text-xs">{record.book.genre}</span>
                                   </div>
                                 )}
@@ -150,7 +151,7 @@ export const RecordsList: React.FC<RecordsListProps> = ({
                                 {/* 阅读时间 */}
                                 {(record.startDate || record.endDate) && (
                                   <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
-                                    <Calendar className="w-3.5 h-3.5" />
+                                    <Calendar className="w-3.5 h-3.5" aria-hidden />
                                     <span>
                                       {record.startDate && formatDate(record.startDate)}
                                       {record.startDate && record.endDate && ' - '}
@@ -171,8 +172,9 @@ export const RecordsList: React.FC<RecordsListProps> = ({
                               <button
                                 onClick={() => onDelete(record.id)}
                                 className="btn-icon text-muted-foreground hover:text-destructive flex-shrink-0"
+                                aria-label={`删除《${record.book.title}》记录`}
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4" aria-hidden />
                               </button>
                             </div>
                           </div>

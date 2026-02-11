@@ -105,8 +105,9 @@ export const BookDetailCard: React.FC<BookDetailCardProps> = ({
                 <button
                   onClick={onClose}
                   className="absolute top-4 right-4 btn-icon bg-background/80 backdrop-blur-sm"
+                  aria-label="关闭详情"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5" aria-hidden />
                 </button>
               </div>
 
@@ -120,14 +121,14 @@ export const BookDetailCard: React.FC<BookDetailCardProps> = ({
                   
                   {/* 作者 */}
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <User className="w-4 h-4" />
+                    <User className="w-4 h-4" aria-hidden />
                     <span>{record.book.author}</span>
                   </div>
                 </div>
 
                 {/* 国家信息 */}
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="w-4 h-4" aria-hidden />
                   <span className="text-lg">{getCountryFlag(record.book.countryCode)}</span>
                   <span>{getCountryName(record.book.countryCode)}</span>
                 </div>
@@ -135,7 +136,7 @@ export const BookDetailCard: React.FC<BookDetailCardProps> = ({
                 {/* 类型 */}
                 {record.book.genre && (
                   <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-muted-foreground" />
+                    <Tag className="w-4 h-4 text-muted-foreground" aria-hidden />
                     <span className="tag">{record.book.genre}</span>
                   </div>
                 )}
@@ -143,7 +144,7 @@ export const BookDetailCard: React.FC<BookDetailCardProps> = ({
                 {/* 阅读时间 */}
                 {(record.startDate || record.endDate) && (
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="w-4 h-4" />
+                    <Calendar className="w-4 h-4" aria-hidden />
                     <span>
                       {record.startDate && formatDate(record.startDate)}
                       {record.startDate && record.endDate && ' - '}
@@ -167,8 +168,9 @@ export const BookDetailCard: React.FC<BookDetailCardProps> = ({
                   <button
                     onClick={handleDelete}
                     className="btn-ghost text-destructive hover:bg-destructive/10"
+                    aria-label="删除此条阅读记录"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-4 h-4 mr-2" aria-hidden />
                     删除记录
                   </button>
                 </div>

@@ -70,6 +70,7 @@ const NUMERIC_TO_ALPHA2: Record<string, string> = {
   "504": "MA", "508": "MZ", "104": "MM", "516": "NA", "524": "NP",
   "528": "NL", "554": "NZ", "558": "NI", "562": "NE", "566": "NG",
   "578": "NO", "512": "OM", "586": "PK", "591": "PA", "598": "PG",
+  "304": "GL",  /* Greenland 格陵兰岛 */
   "600": "PY", "604": "PE", "608": "PH", "616": "PL", "620": "PT",
   "634": "QA", "642": "RO", "643": "RU", "646": "RW", "682": "SA",
   "686": "SN", "688": "RS", "694": "SL", "702": "SG", "703": "SK",
@@ -769,17 +770,19 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                     style={{ cursor: 'pointer' }}
                     className="country-marker"
                   >
-                    {/* 圆形徽章 */}
-                    <circle
-                      cx={0}
-                      cy={0}
-                      r={12}
+                    {/* 书本形状徽章 */}
+                    <rect
+                      x={-10}
+                      y={-14}
+                      width={20}
+                      height={28}
+                      rx={2}
                       fill="hsl(var(--primary))"
                       stroke="hsl(var(--background))"
                       strokeWidth={2}
                       style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
                     />
-                    {/* 数字 */}
+                    {/* 已阅读数量 */}
                     <text
                       x={0}
                       y={1}
@@ -793,13 +796,13 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                     >
                       {books.length}
                     </text>
-                    {/* 国家名称标签 */}
+                    {/* 国家名称标签（横书形状） */}
                     <rect
-                      x={-20}
-                      y={14}
-                      width={40}
-                      height={14}
-                      rx={3}
+                      x={-22}
+                      y={16}
+                      width={44}
+                      height={16}
+                      rx={2}
                       fill="hsl(var(--card))"
                       stroke="hsl(var(--border))"
                       strokeWidth={0.5}
@@ -807,7 +810,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                     />
                     <text
                       x={0}
-                      y={22}
+                      y={25}
                       textAnchor="middle"
                       dominantBaseline="middle"
                       style={{
