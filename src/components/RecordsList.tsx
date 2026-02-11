@@ -107,7 +107,7 @@ export const RecordsList: React.FC<RecordsListProps> = ({
                       transition={{ delay: index * 0.05 }}
                       className="mb-4"
                     >
-                      {/* 国家标题 - 只在显示多个国家时显示 */}
+                      {/* 作者国籍分组标题 - 只在显示多国时显示 */}
                       {!filterCountryCode && sortedCountries.length > 1 && (
                         <div className="flex items-center gap-2 px-6 py-2 bg-muted/50">
                           <span className="text-lg">{getCountryFlag(countryCode)}</span>

@@ -418,10 +418,10 @@ export const ExcelUploadPanel: React.FC<ExcelUploadPanelProps> = ({
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li><strong>书名/title</strong> - 必填</li>
                       <li><strong>作者/author</strong> - 可选（如缺失将使用AI匹配）</li>
-                      <li><strong>作者国籍</strong> - 可选（将映射到国家，如缺失将使用AI匹配）</li>
+                      <li><strong>作者国籍</strong> - 可选（地图按作者国籍展示，如缺失将使用AI匹配）</li>
                       <li><strong>类型/genre</strong> - 可选</li>
-                      <li><strong>国家/country</strong> - 可选（如缺失将使用AI匹配）</li>
-                      <li><strong>国家代码/countryCode</strong> - 可选（如缺失将自动查找）</li>
+                      <li><strong>国家/country</strong> - 可选，指作者国籍（如缺失将使用AI匹配）</li>
+                      <li><strong>国家代码/countryCode</strong> - 可选（如缺失将按作者国籍自动查找）</li>
                       <li><strong>开始日期/startDate</strong> - 可选（格式：YYYY-MM-DD）</li>
                       <li><strong>结束日期/endDate 或 读完日期</strong> - 可选（格式：YYYY-MM-DD）</li>
                       <li><strong>短评/review 或 一句话总结</strong> - 可选</li>

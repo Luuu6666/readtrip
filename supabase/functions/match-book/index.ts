@@ -39,16 +39,17 @@ serve(async (req) => {
   "title": "书名（原文）",
   "author": "作者名",
   "genre": "书籍类型（如：小说、历史、哲学、科幻、传记等）",
-  "country": "书籍主要关联的国家（中文名）",
-  "countryCode": "国家的ISO 3166-1 alpha-2代码（如CN、US、GB、JP等）",
+  "country": "作者国籍所在国家（中文名）",
+  "countryCode": "作者国籍国家的ISO 3166-1 alpha-2代码（如CN、US、GB、JP等）",
   "description": "一句话简介（不超过50字）"
 }
 
-关联国家的判断规则：
-1. 优先使用书籍故事发生的主要地点
-2. 如果是非虚构类，使用书籍描述的主题相关国家
-3. 如果上述都不适用，使用作者的国籍
-4. 确保countryCode是有效的ISO代码
+重要：country 与 countryCode 必须且仅表示「原作者国籍」，即作者本人所属/所属国，而不是：
+- 书籍故事发生地（如写中东的书，作者是中国人则应为中国）
+- 书籍主题或描写的地理区域
+- 出版社所在国
+示例：《看不见的中东》作者为中国人 → country 中国，countryCode CN；《和语言漫步的日记》作者为日本人 → country 日本，countryCode JP。
+若作者有多重国籍，取主要或最常用国籍。确保 countryCode 为有效 ISO 3166-1 alpha-2 代码。
 
 只返回JSON，不要有其他文字。`;
 

@@ -295,11 +295,11 @@ export const BookInputPanel: React.FC<BookInputPanelProps> = ({
                         )}
                       </div>
 
-                      {/* 关联国家 */}
+                      {/* 作者国籍 */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="w-4 h-4" />
-                          <span>关联国家</span>
+                          <span>作者国籍</span>
                         </div>
                         {isEditing ? (
                           <div className="flex gap-2">
@@ -307,7 +307,7 @@ export const BookInputPanel: React.FC<BookInputPanelProps> = ({
                               type="text"
                               value={editedCountry}
                               onChange={(e) => setEditedCountry(e.target.value)}
-                              placeholder="国家名称"
+                              placeholder="作者国籍（国家名）"
                               className="warm-input flex-1"
                             />
                             <input
@@ -394,7 +394,7 @@ export const BookInputPanel: React.FC<BookInputPanelProps> = ({
                     <Search className="w-8 h-8 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground">输入书名并点击✨按钮</p>
-                  <p className="text-sm text-muted-foreground/70 mt-1">AI将自动匹配书籍信息和关联国家</p>
+                  <p className="text-sm text-muted-foreground/70 mt-1">AI将自动匹配书籍信息与作者国籍</p>
                 </div>
               )}
 
@@ -403,7 +403,7 @@ export const BookInputPanel: React.FC<BookInputPanelProps> = ({
                 <div className="text-center py-8">
                   <Loader2 className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
                   <p className="text-foreground">正在匹配书籍信息...</p>
-                  <p className="text-sm text-muted-foreground mt-1">AI正在识别书籍并关联地理位置</p>
+                  <p className="text-sm text-muted-foreground mt-1">AI正在识别书籍与作者国籍</p>
                 </div>
               )}
             </div>

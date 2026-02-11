@@ -126,8 +126,8 @@ export const BookDetailCard: React.FC<BookDetailCardProps> = ({
                   </div>
                 </div>
 
-                {/* 国家信息 */}
-                <div className="flex items-center gap-2 text-muted-foreground">
+                {/* 作者国籍 */}
+                <div className="flex items-center gap-2 text-muted-foreground" title="作者国籍">
                   <MapPin className="w-4 h-4" aria-hidden />
                   <span className="text-lg">{getCountryFlag(record.book.countryCode)}</span>
                   <span>{getCountryName(record.book.countryCode)}</span>
