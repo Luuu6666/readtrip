@@ -7,7 +7,6 @@ import { RecordsList } from '@/components/RecordsList';
 import { ExportPanel } from '@/components/ExportPanel';
 import { ExcelUploadPanel } from '@/components/ExcelUploadPanel';
 import { BookDetailCard } from '@/components/BookDetailCard';
-import { ParchmentDecorations } from '@/components/ParchmentDecorations';
 import { useReadingRecords } from '@/hooks/useReadingRecords';
 import { useThemeStyle, type ThemeStyle } from '@/hooks/useThemeStyle';
 import {
@@ -34,7 +33,7 @@ const Index = () => {
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | undefined>(undefined);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   
-  const { theme, toggleTheme, setThemeStyle, isWarm, isDarkGold, isParchment } = useThemeStyle();
+  const { theme, setThemeStyle } = useThemeStyle();
 
   const {
     records,
@@ -237,8 +236,8 @@ const Index = () => {
   return (
     <div className="relative min-h-screen overflow-hidden paper-texture">
       {/* 头部导航 */}
-      <header className="absolute top-0 left-0 right-0 z-30 px-6 py-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <header className="absolute top-0 left-0 right-0 z-30 py-[var(--page-inset)] px-[var(--page-inset)]">
+        <div className="flex items-center justify-between w-full">
           {/* Logo */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -266,38 +265,57 @@ const Index = () => {
             <div className="flex items-center gap-2 text-muted-foreground">
               <BookOpen className="w-4 h-4" />
               <span className="text-sm">
-                已阅读 <span className="font-medium text-foreground">{stats.totalBooks}</span> 本书
+                已阅读 <span className="font-medium text-foreground text-[1.05rem]">{stats.totalBooks}</span> 本书
               </span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="w-4 h-4" />
               <span className="text-sm">
-                已点亮 <span className="font-medium text-foreground">{stats.totalCountries}</span> 个国家
+                已点亮 <span className="font-medium text-foreground text-[1.05rem]">{stats.totalCountries}</span> 个国家
               </span>
             </div>
           </motion.div>
 
-          {/* 操作按钮 - 仅保留「我的足迹」 */}
+          {/* 操作按钮 - 我的足迹（含清除全部） */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             className="flex items-center gap-2"
           >
-            <button
-              onClick={() => setIsListOpen(true)}
-              className="btn-ghost hidden sm:flex"
-              aria-label="打开我的足迹列表"
-            >
-              <List className="w-4 h-4" aria-hidden />
-              <span>我的足迹</span>
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="btn-ghost hidden sm:flex items-center gap-2"
+                  aria-label="我的足迹"
+                >
+                  <List className="w-4 h-4" aria-hidden />
+                  <span>我的足迹</span>
+                  <ChevronDown className="w-4 h-4 opacity-70" aria-hidden />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[10rem]">
+                <DropdownMenuItem onClick={() => setIsListOpen(true)}>
+                  <List className="w-4 h-4 mr-2" />
+                  查看足迹列表
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleClearAll}
+                  disabled={records.length === 0}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  清除全部
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </motion.div>
         </div>
       </header>
 
       {/* 左下角：风格切换、更新封面、导出（仅图标，悬停显示文字），位于聚合/展开按钮上方 */}
-      <div className="fixed bottom-24 left-4 z-20 flex flex-col-reverse gap-2">
+      <div className="fixed bottom-24 left-[var(--page-inset)] z-20 flex flex-col-reverse gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -349,7 +367,6 @@ const Index = () => {
         ref={mapRef}
         className="absolute inset-0 map-container"
       >
-        {isParchment && <ParchmentDecorations />}
         {!isLoading && (
           <WorldMap
             visitedCountries={visitedCountries}
@@ -418,15 +435,6 @@ const Index = () => {
               <Upload className="w-4 h-4 mr-2" />
               批量导入
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleClearAll}
-              disabled={records.length === 0}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              清除全部
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -437,7 +445,7 @@ const Index = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="fixed bottom-6 left-6 z-20 sm:hidden"
+          className="fixed bottom-[var(--page-inset)] left-[var(--page-inset)] z-20 sm:hidden"
         >
           <div className="glass-panel rounded-lg px-4 py-2 flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1.5">

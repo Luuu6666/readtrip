@@ -560,7 +560,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
             }
           </Geographies>
 
-          {/* 已访问国家的标注 */}
+          {/* 已访问国家的标注 - 随 zoom 反向缩放，地图越大封面/文字相对越小，减少重叠 */}
           {isExpanded ? (
             // 展开模式：显示书籍封面在海洋区域
             // 渲染顺序：1. 书籍区域 2. 连接线 3. 国家名称标签（最上层）
@@ -577,6 +577,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                 const { oceanPosition, booksPositions } = layout;
                 const bookWidth = 20;
                 const bookHeight = 30;
+                const scale = 1 / Math.pow(position.zoom, 0.6);
                 
                 return (
                   <Annotation
@@ -585,6 +586,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                     dx={0}
                     dy={0}
                   >
+                    <g transform={`scale(${scale})`}>
                     <g className="country-books-group">
                       {/* 书籍封面 */}
                       {books.map((book, index) => {
@@ -650,6 +652,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                         );
                       })}
                     </g>
+                    </g>
                   </Annotation>
                 );
               })}
@@ -697,6 +700,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                 
                 const countryName = getCountryName(code);
                 if (!countryName) return null;
+                const scale = 1 / Math.pow(position.zoom, 0.6);
                 
                 return (
                   <Annotation
@@ -705,6 +709,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                     dx={0}
                     dy={0}
                   >
+                    <g transform={`scale(${scale})`}>
                     <g
                       onClick={() => onCountryClick?.(code)}
                       style={{ cursor: 'pointer' }}
@@ -739,6 +744,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                         {countryName.length > 6 ? countryName.slice(0, 5) + '…' : countryName}
                       </text>
                     </g>
+                    </g>
                   </Annotation>
                 );
               })}
@@ -752,6 +758,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
               
               const countryName = getCountryName(code);
               if (!countryName) return null;
+              const scale = 1 / Math.pow(position.zoom, 0.6);
 
               return (
                 <Annotation
@@ -765,6 +772,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                     strokeLinecap: 'round',
                   }}
                 >
+                  <g transform={`scale(${scale})`}>
                   <g
                     onClick={() => onCountryClick?.(code)}
                     style={{ cursor: 'pointer' }}
@@ -822,6 +830,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                     >
                       {countryName.length > 6 ? countryName.slice(0, 5) + '…' : countryName}
                     </text>
+                  </g>
                   </g>
                 </Annotation>
               );
@@ -885,7 +894,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
       </div>
 
       {/* 展开/收起切换按钮 */}
-      <div className="absolute bottom-4 left-4 z-20">
+      <div className="absolute bottom-[var(--page-inset)] left-[var(--page-inset)] z-20">
         <motion.button
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -907,7 +916,7 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
       </div>
 
       {/* 缩放控制按钮 */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-20">
+      <div className="absolute bottom-[var(--page-inset)] right-[var(--page-inset)] flex flex-col gap-2 z-20">
         <button
           onClick={() => setPosition(prev => ({ ...prev, zoom: Math.min(prev.zoom * 1.5, 8) }))}
           className="w-10 h-10 rounded-lg bg-card/90 backdrop-blur border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-card transition-colors"
