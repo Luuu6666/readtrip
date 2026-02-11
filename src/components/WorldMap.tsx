@@ -41,6 +41,7 @@ interface WorldMapProps {
   visitedCountries: string[];
   countryBooks: Map<string, ReadingRecord[]>;
   onCountryClick?: (countryCode: string) => void;
+  onBookClick?: (bookId: string) => void;
 }
 
 // ISO 3166-1 numeric to alpha-2 code mapping
@@ -146,16 +147,31 @@ function generateDefaultCoverSVG(isDarkGold: boolean = false): string {
   return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
 }
 
+// 简单的字符串hash函数，用于生成稳定的索引
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
 // 获取书籍封面图片，优先使用本地图片库
 function getBookCoverUrl(record: ReadingRecord, index: number, isDarkGold: boolean = false): string {
-  // 1. 如果记录中已有封面URL，验证后使用
-  if (record.book.coverUrl) {
-    // 验证URL是否有效（不是空字符串或无效URL）
+  // 1. 如果记录中已有封面URL，直接使用（支持相对路径和绝对路径）
+  if (record.book.coverUrl && record.book.coverUrl.trim()) {
+    // 如果是相对路径（以/开头）或data URL，直接使用
+    if (record.book.coverUrl.startsWith('/') || record.book.coverUrl.startsWith('data:')) {
+      return record.book.coverUrl;
+    }
+    // 如果是绝对URL，验证后使用
     try {
       new URL(record.book.coverUrl);
       return record.book.coverUrl;
     } catch {
-      // URL无效，继续使用默认封面
+      // URL无效，继续查找其他封面
     }
   }
   
@@ -165,19 +181,16 @@ function getBookCoverUrl(record: ReadingRecord, index: number, isDarkGold: boole
     return localCover;
   }
   
-  // 3. 使用预设图片，根据索引循环使用本地图片库
-  if (DEFAULT_BOOK_COVERS.length > 0) {
-    return DEFAULT_BOOK_COVERS[index % DEFAULT_BOOK_COVERS.length];
-  }
-  
-  // 4. 使用默认SVG图案（确保总是有封面）
-  return generateDefaultCoverSVG(isDarkGold);
+  // 3. 如果没有匹配到本地封面，使用logo.png作为默认封面
+  // 不再使用循环索引，避免不同书籍显示相同封面
+  return '/book-covers/logo.png';
 }
 
 export const WorldMap: React.FC<WorldMapProps> = memo(({
   visitedCountries,
   countryBooks,
   onCountryClick,
+  onBookClick,
 }) => {
   const { isDarkGold } = useThemeStyle();
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
@@ -220,6 +233,262 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
 
   const hoveredBooks = hoveredCountry ? countryBooks.get(hoveredCountry) || [] : [];
 
+  // 展开模式：计算所有国家的书籍位置，避免重叠
+  const expandedLayouts = useMemo(() => {
+    if (!isExpanded) return new Map();
+    
+    const bookWidth = 20;
+    const bookHeight = 30;
+    const bookSpacing = 3;
+    const booksPerRow = 6; // 每行显示6本书
+    const rowSpacing = 35;
+    
+    const layouts: Map<string, {
+      oceanPosition: [number, number];
+      booksPositions: Array<{ x: number; y: number }>;
+      rowCount: number;
+    }> = new Map();
+    
+    // 存储已占用的位置信息：{ position: [lon, lat], radius: number }
+    const usedRegions: Array<{ position: [number, number]; radius: number }> = [];
+    
+    // 计算两个坐标之间的距离（度）
+    const distance = (pos1: [number, number], pos2: [number, number]) => {
+      const dx = pos1[0] - pos2[0];
+      const dy = pos1[1] - pos2[1];
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+    
+    // 计算书籍区域所需的半径（根据行数和书籍尺寸）
+    const calculateBooksRadius = (rowCount: number): number => {
+      // 书籍区域的最大宽度：6本书 * 20宽度 + 5个间距 * 3 = 135（相对单位）
+      // 书籍区域的最大高度：rowCount * 35行间距
+      // 转换为地理坐标的近似度数值（考虑投影缩放）
+      // 使用较大的安全边距
+      const maxWidth = booksPerRow * bookWidth + (booksPerRow - 1) * bookSpacing;
+      const maxHeight = rowCount * rowSpacing;
+      // 将像素/相对单位转换为地理坐标度数的近似值
+      // 考虑到地图投影，大约 1 度 ≈ 100-150 像素（取决于缩放级别）
+      // 使用保守估计：最大尺寸转换为度数，加上安全边距
+      const radiusInDegrees = Math.max(maxWidth, maxHeight) / 100 + 3; // 基础半径 + 安全边距
+      return radiusInDegrees;
+    };
+    
+    // 存储所有国家中心位置，用于避免书籍区域与国家名称标签重叠
+    const countryCenters: Array<[number, number]> = [];
+    for (const [code, books] of countryBooks.entries()) {
+      if (books.length === 0) continue;
+      const center = COUNTRY_CENTERS[code];
+      if (center) {
+        countryCenters.push(center);
+      }
+    }
+    
+    // 检查位置是否与已占用的区域重叠，以及是否与国家中心重叠
+    const isPositionUsed = (
+      pos: [number, number], 
+      requiredRadius: number,
+      currentCenter?: [number, number]
+    ): boolean => {
+      // 检查与其他已占用书籍区域的重叠
+      for (const region of usedRegions) {
+        const dist = distance(pos, region.position);
+        // 如果两个区域的半径之和大于它们之间的距离，则重叠
+        if (dist < requiredRadius + region.radius) {
+          return true;
+        }
+      }
+      
+      // 检查与国家中心位置的重叠（国家名称标签位置）
+      // 国家名称标签大约占用 3-4 度的空间，增加边距确保不被遮挡
+      const labelRadius = 3.5;
+      for (const countryCenter of countryCenters) {
+        // 跳过当前国家自己的中心
+        if (currentCenter && 
+            countryCenter[0] === currentCenter[0] && 
+            countryCenter[1] === currentCenter[1]) {
+          continue;
+        }
+        const dist = distance(pos, countryCenter);
+        // 如果书籍区域与国家中心标签重叠，则不可用
+        // 增加安全边距，确保书籍不被国家名遮挡
+        if (dist < requiredRadius + labelRadius) {
+          return true;
+        }
+      }
+      
+      return false;
+    };
+    
+    // 计算与其他国家的距离，优先选择远离其他国家的方向
+    // 同时考虑避免与国家中心重叠
+    const getBestDirection = (
+      center: [number, number],
+      directions: Array<[number, number]>,
+      offset: number,
+      requiredRadius: number
+    ): [number, number] => {
+      // 计算每个方向的位置与其他国家的平均距离
+      const directionScores = directions.map((dir, idx) => {
+        const testPos: [number, number] = [
+          center[0] + dir[0] * offset,
+          center[1] + dir[1] * offset,
+        ];
+        
+        // 计算与所有已占用区域的最小距离
+        let minDistance = Infinity;
+        for (const region of usedRegions) {
+          const dist = distance(testPos, region.position);
+          minDistance = Math.min(minDistance, dist);
+        }
+        
+        // 计算与所有国家中心的最小距离（避免与国家名称标签重叠）
+        let minCenterDistance = Infinity;
+        for (const countryCenter of countryCenters) {
+          // 跳过当前国家自己的中心
+          if (countryCenter[0] === center[0] && countryCenter[1] === center[1]) {
+            continue;
+          }
+          const dist = distance(testPos, countryCenter);
+          minCenterDistance = Math.min(minCenterDistance, dist);
+        }
+        
+        // 综合评分：优先选择距离其他区域远，且不重叠的方向
+        // 如果与国家中心重叠，给予很大的惩罚
+        const labelRadius = 3.5;
+        const centerPenalty = minCenterDistance < requiredRadius + labelRadius ? -1000 : 0;
+        // 优先选择距离国家名标签近但不重叠的位置（在国家名旁边）
+        const distanceToOwnCenter = distance(testPos, center);
+        const score = minDistance + minCenterDistance * 0.5 + centerPenalty + (20 - distanceToOwnCenter) * 0.1;
+        
+        return { direction: dir, score, index: idx };
+      });
+      
+      // 按评分从大到小排序，优先选择评分最高的方向
+      directionScores.sort((a, b) => b.score - a.score);
+      
+      return directionScores[0].direction;
+    };
+    
+    // 计算国家最近的海洋位置（向不同方向偏移）
+    const getOceanPosition = (
+      center: [number, number],
+      rowCount: number,
+      countryIndex: number
+    ): [number, number] => {
+      const directions: Array<[number, number]> = [
+        [0, -1],   // 北
+        [1, -0.5], // 东北
+        [1, 0.5],  // 东南
+        [0, 1],    // 南
+        [-1, 0.5], // 西南
+        [-1, -0.5],// 西北
+      ];
+      
+      const [lon, lat] = center;
+      // 调整基础偏移距离：让书籍靠近国家名但不被遮挡
+      // 国家名标签占用约3.5度，书籍区域半径约3-5度，所以最小距离需要约6-8度
+      // 但为了更靠近，我们从5度开始尝试
+      const baseOffset = 5.5;
+      const requiredRadius = calculateBooksRadius(rowCount);
+      
+      // 确保书籍区域与国家名标签的最小距离
+      const minDistanceFromLabel = requiredRadius + 3.5;
+      
+      // 尝试所有方向找到可用位置，优先选择靠近国家名的位置
+      for (let i = 0; i < directions.length; i++) {
+        const dir = directions[(countryIndex + i) % directions.length];
+        let offset = baseOffset;
+        
+        // 如果基础偏移不够，逐步增加偏移距离，但不超过10度（保持靠近）
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const newPos: [number, number] = [
+            lon + dir[0] * offset,
+            lat + dir[1] * offset,
+          ];
+          
+          // 检查距离国家中心的距离，确保不被国家名遮挡
+          const distFromCenter = distance(newPos, center);
+          if (distFromCenter < minDistanceFromLabel) {
+            offset += 1;
+            continue;
+          }
+          
+          if (!isPositionUsed(newPos, requiredRadius, center)) {
+            usedRegions.push({ position: newPos, radius: requiredRadius });
+            return newPos;
+          }
+          
+          // 增加偏移距离重试
+          offset += 1.5;
+          
+          // 如果偏移太远，停止尝试这个方向
+          if (offset > 10) {
+            break;
+          }
+        }
+      }
+      
+      // 如果所有方向都被占用，使用智能方向选择，但确保最小距离
+      if (usedRegions.length > 0) {
+        const bestDir = getBestDirection(center, directions, Math.max(baseOffset, minDistanceFromLabel), requiredRadius);
+        const newPos: [number, number] = [
+          lon + bestDir[0] * Math.max(baseOffset, minDistanceFromLabel),
+          lat + bestDir[1] * Math.max(baseOffset, minDistanceFromLabel),
+        ];
+        
+        // 确保距离国家中心足够远
+        const distFromCenter = distance(newPos, center);
+        if (distFromCenter >= minDistanceFromLabel && !isPositionUsed(newPos, requiredRadius, center)) {
+          usedRegions.push({ position: newPos, radius: requiredRadius });
+          return newPos;
+        }
+      }
+      
+      // 如果所有方向都被占用，使用默认偏移（但确保最小距离）
+      const defaultDir = directions[countryIndex % directions.length];
+      const finalOffset = Math.max(baseOffset + 3, minDistanceFromLabel);
+      const defaultPos: [number, number] = [
+        lon + defaultDir[0] * finalOffset,
+        lat + defaultDir[1] * finalOffset,
+      ];
+      usedRegions.push({ position: defaultPos, radius: requiredRadius });
+      return defaultPos;
+    };
+    
+    let countryIndex = 0;
+    for (const [code, books] of countryBooks.entries()) {
+      if (books.length === 0) continue;
+      const center = COUNTRY_CENTERS[code];
+      if (!center) continue;
+      
+      const rowCount = Math.ceil(books.length / booksPerRow);
+      const oceanPosition = getOceanPosition(center, rowCount, countryIndex);
+      
+      // 计算书籍在海洋区域的相对位置
+      const booksPositions: Array<{ x: number; y: number }> = [];
+      for (let i = 0; i < books.length; i++) {
+        const row = Math.floor(i / booksPerRow);
+        const col = i % booksPerRow;
+        const booksInCurrentRow = Math.min(booksPerRow, books.length - row * booksPerRow);
+        const rowWidth = booksInCurrentRow * bookWidth + (booksInCurrentRow - 1) * bookSpacing;
+        const startX = -rowWidth / 2 + bookWidth / 2;
+        const x = startX + col * (bookWidth + bookSpacing);
+        const y = -rowCount * rowSpacing / 2 + row * rowSpacing;
+        booksPositions.push({ x, y });
+      }
+      
+      layouts.set(code, {
+        oceanPosition,
+        booksPositions,
+        rowCount,
+      });
+      countryIndex++;
+    }
+    
+    return layouts;
+  }, [countryBooks, isExpanded]);
+
   return (
     <div className="relative w-full h-full map-wrapper vintage-map-bg">
       <ComposableMap
@@ -234,6 +503,9 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
         <defs>
           <clipPath id="book-clip">
             <rect x="-12" y="-18" width="24" height="36" rx="2" />
+          </clipPath>
+          <clipPath id="book-clip-small">
+            <rect x="-10" y="-15" width="20" height="30" rx="2" />
           </clipPath>
         </defs>
         <ZoomableGroup
@@ -288,16 +560,198 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
           </Geographies>
 
           {/* 已访问国家的标注 */}
-          {Array.from(countryBooks.entries()).map(([code, books]) => {
-            if (books.length === 0) return null;
-            const center = COUNTRY_CENTERS[code];
-            if (!center) return null;
-            
-            const countryName = getCountryName(code);
-            if (!countryName) return null;
+          {isExpanded ? (
+            // 展开模式：显示书籍封面在海洋区域
+            // 渲染顺序：1. 书籍区域 2. 连接线 3. 国家名称标签（最上层）
+            <>
+              {/* 第一步：渲染所有书籍区域 */}
+              {Array.from(countryBooks.entries()).map(([code, books]) => {
+                if (books.length === 0) return null;
+                const center = COUNTRY_CENTERS[code];
+                if (!center) return null;
+                
+                const layout = expandedLayouts.get(code);
+                if (!layout) return null;
+                
+                const { oceanPosition, booksPositions } = layout;
+                const bookWidth = 20;
+                const bookHeight = 30;
+                
+                return (
+                  <Annotation
+                    key={`books-${code}`}
+                    subject={oceanPosition}
+                    dx={0}
+                    dy={0}
+                  >
+                    <g className="country-books-group">
+                      {/* 书籍封面 */}
+                      {books.map((book, index) => {
+                        const pos = booksPositions[index];
+                        if (!pos) return null;
+                        
+                        return (
+                            <g
+                              key={book.id}
+                              transform={`translate(${pos.x}, ${pos.y})`}
+                              style={{ cursor: 'pointer' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onBookClick?.(book.id);
+                              }}
+                            >
+                            {/* 书籍封面阴影 */}
+                            <rect
+                              x={-10}
+                              y={-15}
+                              width={bookWidth}
+                              height={bookHeight}
+                              rx={2}
+                              fill="rgba(0,0,0,0.25)"
+                              transform="translate(1, 1)"
+                            />
+                            {/* 书籍封面 */}
+                            {(() => {
+                              const coverUrl = getBookCoverUrl(book, index, isDarkGold);
+                              
+                              return (
+                                <image
+                                  x={-10}
+                                  y={-15}
+                                  width={bookWidth}
+                                  height={bookHeight}
+                                  href={coverUrl}
+                                  preserveAspectRatio="xMidYMid slice"
+                                  clipPath="url(#book-clip-small)"
+                                  style={{
+                                    filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))',
+                                  }}
+                                  onError={(e) => {
+                                    // 如果图片加载失败，使用logo.png
+                                    const target = e.target as SVGImageElement;
+                                    target.href.baseVal = '/book-covers/logo.png';
+                                  }}
+                                />
+                              );
+                            })()}
+                            {/* 书籍封面边框 */}
+                            <rect
+                              x={-10}
+                              y={-15}
+                              width={bookWidth}
+                              height={bookHeight}
+                              rx={2}
+                              fill="none"
+                              stroke="hsl(var(--border))"
+                              strokeWidth={0.5}
+                            />
+                          </g>
+                        );
+                      })}
+                    </g>
+                  </Annotation>
+                );
+              })}
+              
+              {/* 第二步：渲染所有连接线（从书籍区域中心到国家名称标签） */}
+              {Array.from(countryBooks.entries()).map(([code, books]) => {
+                if (books.length === 0) return null;
+                const center = COUNTRY_CENTERS[code];
+                if (!center) return null;
+                
+                const layout = expandedLayouts.get(code);
+                if (!layout) return null;
+                
+                const { oceanPosition } = layout;
+                
+                return (
+                  <Annotation
+                    key={`connector-${code}`}
+                    subject={oceanPosition}
+                    dx={0}
+                    dy={0}
+                    connectorProps={{
+                      stroke: 'hsl(var(--primary) / 0.3)',
+                      strokeWidth: 0.3,
+                      strokeLinecap: 'round',
+                      strokeDasharray: '1.5,1.5',
+                    }}
+                  >
+                    <Annotation
+                      subject={center}
+                      dx={0}
+                      dy={0}
+                    >
+                      <g />
+                    </Annotation>
+                  </Annotation>
+                );
+              })}
+              
+              {/* 第三步：渲染所有国家名称标签（最上层） */}
+              {Array.from(countryBooks.entries()).map(([code, books]) => {
+                if (books.length === 0) return null;
+                const center = COUNTRY_CENTERS[code];
+                if (!center) return null;
+                
+                const countryName = getCountryName(code);
+                if (!countryName) return null;
+                
+                return (
+                  <Annotation
+                    key={`label-${code}`}
+                    subject={center}
+                    dx={0}
+                    dy={0}
+                  >
+                    <g
+                      onClick={() => onCountryClick?.(code)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <rect
+                        x={-20}
+                        y={-7}
+                        width={40}
+                        height={14}
+                        rx={3}
+                        fill="hsl(var(--card))"
+                        stroke="hsl(var(--border))"
+                        strokeWidth={0.5}
+                        style={{ 
+                          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
+                          pointerEvents: 'auto',
+                        }}
+                      />
+                      <text
+                        x={0}
+                        y={1}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        style={{
+                          fontFamily: 'var(--font-serif), serif',
+                          fontSize: 7,
+                          fill: 'hsl(var(--foreground))',
+                          fontWeight: 500,
+                          pointerEvents: 'none',
+                        }}
+                      >
+                        {countryName.length > 6 ? countryName.slice(0, 5) + '…' : countryName}
+                      </text>
+                    </g>
+                  </Annotation>
+                );
+              })}
+            </>
+          ) : (
+            // 收起模式：显示数字徽章
+            Array.from(countryBooks.entries()).map(([code, books]) => {
+              if (books.length === 0) return null;
+              const center = COUNTRY_CENTERS[code];
+              if (!center) return null;
+              
+              const countryName = getCountryName(code);
+              if (!countryName) return null;
 
-            // 展开模式：显示书籍封面
-            if (isExpanded) {
               return (
                 <Annotation
                   key={code}
@@ -311,205 +765,65 @@ export const WorldMap: React.FC<WorldMapProps> = memo(({
                   }}
                 >
                   <g
-                    className="country-books-group"
+                    onClick={() => onCountryClick?.(code)}
+                    style={{ cursor: 'pointer' }}
+                    className="country-marker"
                   >
-                    {/* 书籍封面容器 - 水平并排排列 */}
-                    {books.slice(0, 5).map((book, index) => {
-                      const totalBooks = Math.min(books.length, 5);
-                      const bookWidth = 24; // 书籍宽度
-                      const bookSpacing = 4; // 书籍之间的间距
-                      const totalWidth = totalBooks * bookWidth + (totalBooks - 1) * bookSpacing;
-                      const startX = -totalWidth / 2 + bookWidth / 2; // 起始X位置（居中）
-                      const x = startX + index * (bookWidth + bookSpacing);
-                      const y = -28; // 书籍封面在标签上方，距离更近
-                      
-                      return (
-                        <g
-                          key={book.id}
-                          transform={`translate(${x}, ${y})`}
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => onCountryClick?.(code)}
-                        >
-                          {/* 书籍封面阴影 */}
-                          <rect
-                            x={-12}
-                            y={-18}
-                            width={24}
-                            height={36}
-                            rx={2}
-                            fill="rgba(0,0,0,0.25)"
-                            transform="translate(1.5, 1.5)"
-                          />
-                          {/* 书籍封面 */}
-                          {(() => {
-                            const coverUrl = getBookCoverUrl(book, index, isDarkGold);
-                            // 如果是默认SVG，直接使用image标签；否则需要处理加载失败的情况
-                            const isDefaultSVG = coverUrl.startsWith('data:image/svg+xml');
-                            
-                            return (
-                              <image
-                                x={-12}
-                                y={-18}
-                                width={24}
-                                height={36}
-                                href={coverUrl}
-                                preserveAspectRatio="xMidYMid slice"
-                                clipPath="url(#book-clip)"
-                                style={{
-                                  filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))',
-                                }}
-                              />
-                            );
-                          })()}
-                          {/* 书籍封面边框 */}
-                          <rect
-                            x={-12}
-                            y={-18}
-                            width={24}
-                            height={36}
-                            rx={2}
-                            fill="none"
-                            stroke="hsl(var(--border))"
-                            strokeWidth={0.5}
-                          />
-                        </g>
-                      );
-                    })}
-                    {/* 国家名称标签 */}
-                    <g
-                      onClick={() => onCountryClick?.(code)}
-                      style={{ cursor: 'pointer' }}
+                    {/* 圆形徽章 */}
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r={12}
+                      fill="hsl(var(--primary))"
+                      stroke="hsl(var(--background))"
+                      strokeWidth={2}
+                      style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
+                    />
+                    {/* 数字 */}
+                    <text
+                      x={0}
+                      y={1}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      style={{
+                        fontSize: 10,
+                        fill: 'hsl(var(--primary-foreground))',
+                        fontWeight: 700,
+                      }}
                     >
-                      <rect
-                        x={-20}
-                        y={14}
-                        width={40}
-                        height={14}
-                        rx={3}
-                        fill="hsl(var(--card))"
-                        stroke="hsl(var(--border))"
-                        strokeWidth={0.5}
-                        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
-                      />
-                      <text
-                        x={0}
-                        y={22}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        style={{
-                          fontFamily: 'var(--font-serif), serif',
-                          fontSize: 7,
-                          fill: 'hsl(var(--foreground))',
-                          fontWeight: 500,
-                        }}
-                      >
-                        {countryName.length > 6 ? countryName.slice(0, 5) + '…' : countryName}
-                      </text>
-                    </g>
-                    {/* 书籍数量徽章 */}
-                    {books.length > 5 && (
-                      <circle
-                        cx={20}
-                        cy={-20}
-                        r={8}
-                        fill="hsl(var(--primary))"
-                        stroke="hsl(var(--background))"
-                        strokeWidth={1.5}
-                        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
-                      />
-                    )}
-                    {books.length > 5 && (
-                      <text
-                        x={20}
-                        y={-18}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        style={{
-                          fontSize: 7,
-                          fill: 'hsl(var(--primary-foreground))',
-                          fontWeight: 700,
-                        }}
-                      >
-                        +{books.length - 5}
-                      </text>
-                    )}
+                      {books.length}
+                    </text>
+                    {/* 国家名称标签 */}
+                    <rect
+                      x={-20}
+                      y={14}
+                      width={40}
+                      height={14}
+                      rx={3}
+                      fill="hsl(var(--card))"
+                      stroke="hsl(var(--border))"
+                      strokeWidth={0.5}
+                      style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
+                    />
+                    <text
+                      x={0}
+                      y={22}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      style={{
+                        fontFamily: 'var(--font-serif), serif',
+                        fontSize: 7,
+                        fill: 'hsl(var(--foreground))',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {countryName.length > 6 ? countryName.slice(0, 5) + '…' : countryName}
+                    </text>
                   </g>
                 </Annotation>
               );
-            }
-
-            // 收起模式：显示数字徽章
-            return (
-              <Annotation
-                key={code}
-                subject={center}
-                dx={0}
-                dy={-25}
-                connectorProps={{
-                  stroke: 'hsl(var(--primary) / 0.4)',
-                  strokeWidth: 0.5,
-                  strokeLinecap: 'round',
-                }}
-              >
-                <g
-                  onClick={() => onCountryClick?.(code)}
-                  style={{ cursor: 'pointer' }}
-                  className="country-marker"
-                >
-                  {/* 圆形徽章 */}
-                  <circle
-                    cx={0}
-                    cy={0}
-                    r={12}
-                    fill="hsl(var(--primary))"
-                    stroke="hsl(var(--background))"
-                    strokeWidth={2}
-                    style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
-                  />
-                  {/* 数字 */}
-                  <text
-                    x={0}
-                    y={1}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    style={{
-                      fontSize: 10,
-                      fill: 'hsl(var(--primary-foreground))',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {books.length}
-                  </text>
-                  {/* 国家名称标签 */}
-                  <rect
-                    x={-20}
-                    y={14}
-                    width={40}
-                    height={14}
-                    rx={3}
-                    fill="hsl(var(--card))"
-                    stroke="hsl(var(--border))"
-                    strokeWidth={0.5}
-                    style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
-                  />
-                  <text
-                    x={0}
-                    y={22}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    style={{
-                      fontFamily: 'var(--font-serif), serif',
-                      fontSize: 7,
-                      fill: 'hsl(var(--foreground))',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {countryName.length > 6 ? countryName.slice(0, 5) + '…' : countryName}
-                  </text>
-                </g>
-              </Annotation>
-            );
-          })}
+            })
+          )}
         </ZoomableGroup>
       </ComposableMap>
 

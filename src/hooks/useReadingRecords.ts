@@ -38,14 +38,81 @@ export function useReadingRecords() {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    saveRecords([...records, newRecord]);
+    // 使用函数式更新确保基于最新状态
+    setRecords(prevRecords => {
+      const updated = [...prevRecords, newRecord];
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        console.log('保存记录成功，当前总数:', updated.length);
+      } catch (error) {
+        console.error('Failed to save reading records:', error);
+      }
+      return updated;
+    });
     return newRecord;
-  }, [records, saveRecords]);
+  }, []);
+  
+  // 批量添加记录
+  const addRecords = useCallback((newRecords: Array<Omit<ReadingRecord, 'id' | 'createdAt'>>) => {
+    console.log('addRecords 被调用，准备添加:', newRecords.length, '条记录');
+    const recordsWithIds: ReadingRecord[] = newRecords.map(record => ({
+      ...record,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    }));
+    
+    // 验证数据格式
+    recordsWithIds.forEach((record, index) => {
+      if (!record.book || !record.book.title || !record.book.countryCode) {
+        console.error(`第 ${index + 1} 条记录格式错误:`, record);
+      }
+    });
+    
+    // 使用函数式更新确保基于最新状态
+    setRecords(prevRecords => {
+      const updated = [...prevRecords, ...recordsWithIds];
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        console.log('批量保存成功，总记录数:', updated.length);
+        console.log('保存的数据示例:', updated.slice(0, 2));
+      } catch (error) {
+        console.error('Failed to save reading records:', error);
+      }
+      return updated;
+    });
+    return recordsWithIds;
+  }, []);
 
   // 删除记录
   const deleteRecord = useCallback((id: string) => {
     saveRecords(records.filter(r => r.id !== id));
   }, [records, saveRecords]);
+
+  // 更新记录
+  const updateRecord = useCallback((id: string, updates: Partial<ReadingRecord>) => {
+    setRecords(prevRecords => {
+      const updated = prevRecords.map(record => 
+        record.id === id ? { ...record, ...updates } : record
+      );
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      } catch (error) {
+        console.error('Failed to save reading records:', error);
+      }
+      return updated;
+    });
+  }, []);
+
+  // 清除所有记录
+  const clearAllRecords = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      setRecords([]);
+      console.log('已清除所有阅读记录');
+    } catch (error) {
+      console.error('Failed to clear reading records:', error);
+    }
+  }, []);
 
   // 获取按国家分组的数据
   const getCountryData = useCallback((): CountryData[] => {
@@ -86,7 +153,10 @@ export function useReadingRecords() {
     records,
     isLoading,
     addRecord,
+    addRecords,
     deleteRecord,
+    updateRecord,
+    clearAllRecords,
     getCountryData,
     getVisitedCountries,
     getStats,

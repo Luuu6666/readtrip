@@ -1,20 +1,27 @@
 import React, { useRef, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Download, Plus, List, MapPin, BookMarked, Palette } from 'lucide-react';
+import { BookOpen, Download, Plus, List, MapPin, BookMarked, Palette, Upload, RefreshCw, Trash2 } from 'lucide-react';
 import { WorldMap } from '@/components/WorldMap';
 import { BookInputPanel } from '@/components/BookInputPanel';
 import { RecordsList } from '@/components/RecordsList';
 import { ExportPanel } from '@/components/ExportPanel';
+import { ExcelUploadPanel } from '@/components/ExcelUploadPanel';
+import { BookDetailCard } from '@/components/BookDetailCard';
 import { useReadingRecords } from '@/hooks/useReadingRecords';
 import { useThemeStyle } from '@/hooks/useThemeStyle';
 import { BookInfo, ReadingRecord } from '@/types/reading';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { getLocalCoverUrl } from '@/lib/bookCovers';
 
 const Index = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isListOpen, setIsListOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isExcelUploadOpen, setIsExcelUploadOpen] = useState(false);
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | undefined>(undefined);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   
   const { theme, toggleTheme, isWarm, isDarkGold } = useThemeStyle();
 
@@ -22,10 +29,15 @@ const Index = () => {
     records,
     isLoading,
     addRecord,
+    addRecords,
     deleteRecord,
+    updateRecord,
+    clearAllRecords,
     getVisitedCountries,
     getStats,
   } = useReadingRecords();
+  
+  const [isUpdatingCovers, setIsUpdatingCovers] = useState(false);
 
   const visitedCountries = useMemo(() => getVisitedCountries(), [records, getVisitedCountries]);
   const stats = useMemo(() => getStats(), [records, getStats]);
@@ -63,6 +75,152 @@ const Index = () => {
   const handleCloseList = () => {
     setIsListOpen(false);
     setSelectedCountryCode(undefined);
+  };
+
+  const handleBookClick = (bookId: string) => {
+    setSelectedBookId(bookId);
+  };
+
+  const handleCloseBookDetail = () => {
+    setSelectedBookId(null);
+  };
+
+  const selectedBook = useMemo(() => {
+    if (!selectedBookId) return null;
+    return records.find(r => r.id === selectedBookId) || null;
+  }, [selectedBookId, records]);
+
+  const handleExcelImport = (books: Array<{ book: BookInfo; startDate?: string; endDate?: string; review?: string }>) => {
+    console.log('handleExcelImport 收到书籍:', books);
+    console.log('书籍数量:', books.length);
+    
+    // 验证数据
+    const validBooks = books.filter(item => {
+      const isValid = item.book && item.book.title && item.book.countryCode;
+      if (!isValid) {
+        console.warn('无效的书籍数据:', item);
+      }
+      return isValid;
+    });
+    
+    console.log('有效书籍数量:', validBooks.length);
+    
+    if (validBooks.length === 0) {
+      toast.error('没有有效的书籍数据');
+      return;
+    }
+    
+    // 使用批量添加方法
+    addRecords(validBooks);
+    console.log('批量添加完成，当前记录数:', records.length + validBooks.length);
+    toast.success(`成功导入 ${validBooks.length} 本书`);
+  };
+
+  // 更新所有书籍的封面
+  const handleUpdateCovers = async () => {
+    if (records.length === 0) {
+      toast.error('没有书籍需要更新封面');
+      return;
+    }
+
+    setIsUpdatingCovers(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    try {
+      // 逐个更新封面
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i];
+        const bookTitle = record.book.title;
+
+        try {
+          // 调用AI匹配API重新获取封面
+          const { data, error } = await supabase.functions.invoke('match-book', {
+            body: { bookTitle },
+          });
+
+          if (error) {
+            console.error(`更新 "${bookTitle}" 封面失败:`, error);
+            failCount++;
+            continue;
+          }
+
+          if (data && data.bookInfo) {
+            // 优先使用API返回的封面URL
+            let newCoverUrl = data.bookInfo.coverUrl;
+
+            // 如果API没有返回封面，尝试从本地图片库匹配
+            if (!newCoverUrl) {
+              newCoverUrl = getLocalCoverUrl(bookTitle) || undefined;
+            }
+
+            // 更新记录的封面URL
+            if (newCoverUrl) {
+              updateRecord(record.id, {
+                book: {
+                  ...record.book,
+                  coverUrl: newCoverUrl,
+                },
+              });
+              successCount++;
+            } else {
+              // 如果仍然没有找到封面，使用默认logo
+              updateRecord(record.id, {
+                book: {
+                  ...record.book,
+                  coverUrl: '/book-covers/logo.png',
+                },
+              });
+              successCount++;
+            }
+          } else {
+            // 尝试从本地图片库匹配
+            const localCover = getLocalCoverUrl(bookTitle);
+            if (localCover) {
+              updateRecord(record.id, {
+                book: {
+                  ...record.book,
+                  coverUrl: localCover,
+                },
+              });
+              successCount++;
+            } else {
+              failCount++;
+            }
+          }
+
+          // 避免API限流，每10本书暂停一下
+          if ((i + 1) % 10 === 0) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        } catch (err) {
+          console.error(`更新 "${bookTitle}" 封面时出错:`, err);
+          failCount++;
+        }
+      }
+
+      toast.success(
+        `封面更新完成！成功: ${successCount} 本，失败: ${failCount} 本`
+      );
+    } catch (error) {
+      console.error('批量更新封面时出错:', error);
+      toast.error('更新封面时出错，请稍后重试');
+    } finally {
+      setIsUpdatingCovers(false);
+    }
+  };
+
+  // 清除所有书籍
+  const handleClearAll = () => {
+    if (records.length === 0) {
+      toast.info('没有书籍需要清除');
+      return;
+    }
+
+    if (confirm(`确定要清除所有 ${records.length} 本书的阅读记录吗？此操作不可恢复！`)) {
+      clearAllRecords();
+      toast.success('已清除所有阅读记录');
+    }
   };
 
   return (
@@ -125,6 +283,22 @@ const Index = () => {
               <span>{isDarkGold ? '温暖' : '黑金'}</span>
             </button>
             <button
+              onClick={() => setIsExcelUploadOpen(true)}
+              className="btn-ghost hidden sm:flex"
+            >
+              <Upload className="w-4 h-4" />
+              <span>批量导入</span>
+            </button>
+            <button
+              onClick={handleUpdateCovers}
+              className="btn-ghost hidden sm:flex"
+              disabled={isUpdatingCovers || records.length === 0}
+              title="重新匹配所有书籍的封面"
+            >
+              <RefreshCw className={`w-4 h-4 ${isUpdatingCovers ? 'animate-spin' : ''}`} />
+              <span>{isUpdatingCovers ? '更新中...' : '更新封面'}</span>
+            </button>
+            <button
               onClick={() => setIsListOpen(true)}
               className="btn-ghost hidden sm:flex"
             >
@@ -138,6 +312,15 @@ const Index = () => {
             >
               <Download className="w-4 h-4" />
               <span>导出</span>
+            </button>
+            <button
+              onClick={handleClearAll}
+              className="btn-ghost hidden sm:flex text-destructive hover:bg-destructive/10"
+              disabled={records.length === 0}
+              title="清除所有阅读记录"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>清除全部</span>
             </button>
           </motion.div>
         </div>
@@ -153,6 +336,7 @@ const Index = () => {
             visitedCountries={visitedCountries}
             countryBooks={countryBooks}
             onCountryClick={handleCountryClick}
+            onBookClick={handleBookClick}
           />
         )}
       </div>
@@ -247,6 +431,21 @@ const Index = () => {
         onClose={() => setIsExportOpen(false)}
         mapRef={mapRef}
         stats={stats}
+      />
+
+      {/* Excel上传面板 */}
+      <ExcelUploadPanel
+        isOpen={isExcelUploadOpen}
+        onClose={() => setIsExcelUploadOpen(false)}
+        onImport={handleExcelImport}
+      />
+
+      {/* 书籍详情卡片 */}
+      <BookDetailCard
+        isOpen={selectedBookId !== null}
+        onClose={handleCloseBookDetail}
+        record={selectedBook}
+        onDelete={deleteRecord}
       />
     </div>
   );
