@@ -152,10 +152,10 @@ export const BookInputPanel: React.FC<BookInputPanelProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border shadow-elevated z-50 overflow-hidden flex flex-col"
+            className="fixed right-0 top-0 h-full w-full max-w-md glass-panel border-l border-border/50 shadow-elevated z-50 overflow-hidden flex flex-col"
           >
             {/* 头部 */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <BookOpen className="w-5 h-5 text-primary" />
@@ -409,7 +409,7 @@ export const BookInputPanel: React.FC<BookInputPanelProps> = ({
             </div>
 
             {/* 底部按钮 */}
-            <div className="px-6 py-4 border-t border-border bg-card">
+            <div className="px-6 py-4 border-t border-border/50 glass-panel">
               <div className="flex gap-3">
                 <button
                   onClick={handleClose}

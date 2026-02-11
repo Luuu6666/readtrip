@@ -7,6 +7,7 @@ import { RecordsList } from '@/components/RecordsList';
 import { ExportPanel } from '@/components/ExportPanel';
 import { ExcelUploadPanel } from '@/components/ExcelUploadPanel';
 import { BookDetailCard } from '@/components/BookDetailCard';
+import { WelcomeModal } from '@/components/WelcomeModal';
 import { useReadingRecords } from '@/hooks/useReadingRecords';
 import { useThemeStyle, type ThemeStyle } from '@/hooks/useThemeStyle';
 import {
@@ -32,6 +33,13 @@ const Index = () => {
   const [isExcelUploadOpen, setIsExcelUploadOpen] = useState(false);
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | undefined>(undefined);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+  
+  // 开屏弹窗状态 - 首次加载时显示
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(() => {
+    // 检查是否已经访问过（使用localStorage）
+    const hasVisited = localStorage.getItem('readtrip_has_visited');
+    return !hasVisited;
+  });
   
   const { theme, setThemeStyle } = useThemeStyle();
 
@@ -93,6 +101,16 @@ const Index = () => {
 
   const handleCloseBookDetail = () => {
     setSelectedBookId(null);
+  };
+
+  const handleCloseWelcome = () => {
+    setIsWelcomeOpen(false);
+    // 标记已访问
+    localStorage.setItem('readtrip_has_visited', 'true');
+  };
+
+  const handleLogoClick = () => {
+    setIsWelcomeOpen(true);
   };
 
   const selectedBook = useMemo(() => {
@@ -238,11 +256,12 @@ const Index = () => {
       {/* 头部导航 */}
       <header className="absolute top-0 left-0 right-0 z-30 py-[var(--page-inset)] px-[var(--page-inset)]">
         <div className="flex items-center justify-between w-full">
-          {/* Logo */}
+          {/* Logo - 可点击 */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
+            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={handleLogoClick}
           >
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-soft">
               <BookMarked className="w-5 h-5 text-primary-foreground" />
@@ -321,7 +340,7 @@ const Index = () => {
             <button
               onClick={() => setIsExportOpen(true)}
               disabled={records.length === 0}
-              className="w-12 h-12 rounded-lg bg-card/90 backdrop-blur border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-card transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-12 h-12 rounded-lg glass-panel border border-border/50 shadow-soft flex items-center justify-center text-foreground hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed relative"
               aria-label="导出阅读记录"
             >
               <Download className="w-5 h-5" />
@@ -334,7 +353,7 @@ const Index = () => {
             <button
               onClick={handleUpdateCovers}
               disabled={isUpdatingCovers || records.length === 0}
-              className="w-12 h-12 rounded-lg bg-card/90 backdrop-blur border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-card transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-12 h-12 rounded-lg glass-panel border border-border/50 shadow-soft flex items-center justify-center text-foreground hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed relative"
               aria-label={isUpdatingCovers ? '正在更新封面' : '更新封面'}
             >
               <RefreshCw className={`w-5 h-5 ${isUpdatingCovers ? 'animate-spin' : ''}`} />
@@ -346,7 +365,7 @@ const Index = () => {
           <DropdownMenuTrigger asChild>
             <button
               title="风格切换"
-              className="w-12 h-12 rounded-lg bg-card/90 backdrop-blur border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-card transition-colors"
+              className="w-12 h-12 rounded-lg glass-panel border border-border/50 shadow-soft flex items-center justify-center text-foreground hover:opacity-90 transition-opacity relative"
               aria-label="切换系统风格"
             >
               <Palette className="w-5 h-5" />
@@ -386,7 +405,7 @@ const Index = () => {
           className="fixed inset-0 flex items-center justify-center text-center z-20 pointer-events-none"
         >
           <div className="pointer-events-auto">
-          <div className="glass-panel rounded-2xl px-8 py-10 max-w-sm">
+          <div className="glass-panel rounded-2xl px-8 py-10 max-w-sm relative">
             <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-primary/10 flex items-center justify-center">
               <BookOpen className="w-8 h-8 text-primary" />
             </div>
@@ -447,7 +466,7 @@ const Index = () => {
           transition={{ delay: 0.3 }}
           className="fixed bottom-[var(--page-inset)] left-[var(--page-inset)] z-20 sm:hidden"
         >
-          <div className="glass-panel rounded-lg px-4 py-2 flex items-center gap-4 text-sm">
+          <div className="glass-panel rounded-lg px-4 py-2 flex items-center gap-4 text-sm relative">
             <div className="flex items-center gap-1.5">
               <BookOpen className="w-4 h-4 text-primary" />
               <span className="font-medium">{stats.totalBooks}</span>
@@ -497,6 +516,12 @@ const Index = () => {
         onClose={handleCloseBookDetail}
         record={selectedBook}
         onDelete={deleteRecord}
+      />
+
+      {/* 开屏弹窗 */}
+      <WelcomeModal
+        isOpen={isWelcomeOpen}
+        onClose={handleCloseWelcome}
       />
     </div>
   );

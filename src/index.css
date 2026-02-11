@@ -422,24 +422,85 @@
 }
 
 @layer components {
-  /* 玻璃态面板 */
-  .glass-panel {
-    @apply backdrop-blur-md border border-border/50;
-    background: hsl(var(--card) / 0.85);
-    box-shadow: var(--shadow-card);
+  /* 白色噪点纹理 - SVG生成 */
+  .glass-noise {
+    position: relative;
+  }
+  
+  .glass-noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: overlay;
   }
 
-  /* 温暖卡片 */
+  /* 玻璃态面板 - 增强版 */
+  .glass-panel {
+    @apply backdrop-blur-md border border-border/50;
+    background: hsl(var(--card) / 0.75);
+    box-shadow: 
+      var(--shadow-card),
+      inset 0 1px 0 0 hsl(var(--background) / 0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-panel > * {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .glass-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.12'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: overlay;
+  }
+
+  /* 温暖卡片 - 玻璃拟态风格 */
   .warm-card {
-    @apply rounded-lg border border-border/60;
-    background: hsl(var(--card));
-    box-shadow: var(--shadow-soft);
+    @apply rounded-lg border border-border/40;
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 
+      var(--shadow-soft),
+      inset 0 1px 0 0 hsl(var(--background) / 0.4);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .warm-card > * {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .warm-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: overlay;
   }
 
   .warm-card:hover {
-    box-shadow: var(--shadow-card);
+    box-shadow: 
+      var(--shadow-card),
+      inset 0 1px 0 0 hsl(var(--background) / 0.5);
     transform: translateY(-2px);
+    background: hsl(var(--card) / 0.8);
   }
 
   /* 书籍封面容器 */

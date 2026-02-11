@@ -386,9 +386,9 @@ export const ExcelUploadPanel: React.FC<ExcelUploadPanelProps> = ({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
           >
-            <div className="w-full max-w-2xl bg-card rounded-2xl border border-border shadow-elevated overflow-hidden pointer-events-auto max-h-[90vh] flex flex-col">
+            <div className="w-full max-w-2xl glass-panel rounded-2xl border border-border/50 shadow-elevated overflow-hidden pointer-events-auto max-h-[90vh] flex flex-col">
               {/* 头部 */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 flex-shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <FileSpreadsheet className="w-5 h-5 text-primary" />
@@ -530,7 +530,7 @@ export const ExcelUploadPanel: React.FC<ExcelUploadPanelProps> = ({
               </div>
 
               {/* 底部按钮 */}
-              <div className="px-6 py-4 border-t border-border bg-card flex-shrink-0">
+              <div className="px-6 py-4 border-t border-border/50 glass-panel flex-shrink-0">
                 <div className="flex gap-3">
                   <button
                     onClick={handleClose}

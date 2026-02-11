@@ -85,7 +85,7 @@ export const BookDetailCard: React.FC<BookDetailCardProps> = ({
             className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none px-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-elevated overflow-hidden pointer-events-auto">
+            <div className="w-full max-w-lg glass-panel rounded-2xl border border-border/50 shadow-elevated overflow-hidden pointer-events-auto">
               {/* 头部 */}
               <div className="relative h-64 bg-gradient-to-br from-primary/10 to-primary/5">
                 {/* 书籍封面 */}
@@ -104,7 +104,7 @@ export const BookDetailCard: React.FC<BookDetailCardProps> = ({
                 {/* 关闭按钮 */}
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 btn-icon bg-background/80 backdrop-blur-sm"
+                  className="absolute top-4 right-4 btn-icon glass-panel"
                   aria-label="关闭详情"
                 >
                   <X className="w-5 h-5" aria-hidden />
