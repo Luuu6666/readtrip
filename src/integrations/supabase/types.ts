@@ -14,7 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      reading_records: {
+        Row: {
+          id: string;
+          user_id: string;
+          book_title: string;
+          book_author: string;
+          book_cover_url: string | null;
+          book_genre: string | null;
+          book_country: string;
+          book_country_code: string;
+          start_date: string | null;
+          end_date: string | null;
+          review: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          book_title: string;
+          book_author: string;
+          book_cover_url?: string | null;
+          book_genre?: string | null;
+          book_country: string;
+          book_country_code: string;
+          start_date?: string | null;
+          end_date?: string | null;
+          review?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          book_title?: string;
+          book_author?: string;
+          book_cover_url?: string | null;
+          book_genre?: string | null;
+          book_country?: string;
+          book_country_code?: string;
+          start_date?: string | null;
+          end_date?: string | null;
+          review?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     }
     Views: {
       [_ in never]: never

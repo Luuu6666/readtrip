@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Download, Plus, List, MapPin, BookMarked, Palette, Upload, RefreshCw, Trash2, ChevronDown } from 'lucide-react';
+import { BookOpen, Download, Plus, List, MapPin, BookMarked, Palette, Upload, RefreshCw, Trash2, ChevronDown, User, LogOut, LogIn, Cloud, CloudOff } from 'lucide-react';
 import { WorldMap } from '@/components/WorldMap';
 import { BookInputPanel } from '@/components/BookInputPanel';
 import { RecordsList } from '@/components/RecordsList';
@@ -8,7 +8,9 @@ import { ExportPanel } from '@/components/ExportPanel';
 import { ExcelUploadPanel } from '@/components/ExcelUploadPanel';
 import { BookDetailCard } from '@/components/BookDetailCard';
 import { WelcomeModal } from '@/components/WelcomeModal';
+import { AuthDialog } from '@/components/AuthDialog';
 import { useReadingRecords } from '@/hooks/useReadingRecords';
+import { useAuth } from '@/hooks/useAuth';
 import { useThemeStyle, type ThemeStyle } from '@/hooks/useThemeStyle';
 import {
   DropdownMenu,
@@ -46,6 +48,7 @@ const Index = () => {
   const {
     records,
     isLoading,
+    isSyncing,
     addRecord,
     addRecords,
     deleteRecord,
@@ -56,9 +59,21 @@ const Index = () => {
   } = useReadingRecords();
   
   const [isUpdatingCovers, setIsUpdatingCovers] = useState(false);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+
+  const { user, signOut } = useAuth();
 
   const visitedCountries = useMemo(() => getVisitedCountries(), [records, getVisitedCountries]);
   const stats = useMemo(() => getStats(), [records, getStats]);
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast.error('登出失败');
+    } else {
+      toast.success('已登出');
+    }
+  };
 
   // 按国家分组的书籍数据
   const countryBooks = useMemo(() => {
@@ -295,13 +310,114 @@ const Index = () => {
             </div>
           </motion.div>
 
-          {/* 操作按钮 - 我的足迹（含清除全部） */}
+          {/* 操作按钮 - 用户账户和我的足迹 */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             className="flex items-center gap-2"
           >
+            {/* 用户账户按钮 */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="btn-ghost hidden sm:flex items-center gap-2"
+                    aria-label="用户账户"
+                  >
+                    {isSyncing ? (
+                      <Cloud className="w-4 h-4 animate-pulse" />
+                    ) : (
+                      <Cloud className="w-4 h-4" />
+                    )}
+                    <span className="max-w-[120px] truncate">{user.email}</span>
+                    <ChevronDown className="w-4 h-4 opacity-70" aria-hidden />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[12rem]">
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      <span className="truncate">{user.email}</span>
+                    </div>
+                    {isSyncing && (
+                      <div className="flex items-center gap-2 mt-1 text-xs">
+                        <Cloud className="w-3 h-3 animate-pulse" />
+                        <span>同步中...</span>
+                      </div>
+                    )}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    登出
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <button
+                  onClick={() => setIsAuthDialogOpen(true)}
+                  className="btn-ghost hidden sm:flex items-center gap-2"
+                  aria-label="登录"
+                >
+                  <CloudOff className="w-4 h-4" />
+                  <span>登录</span>
+                </button>
+                {/* 移动端登录入口 */}
+                <button
+                  onClick={() => setIsAuthDialogOpen(true)}
+                  className="btn-ghost flex sm:hidden w-10 h-10 rounded-lg items-center justify-center"
+                  aria-label="登录"
+                >
+                  <CloudOff className="w-5 h-5" />
+                </button>
+              </>
+            )}
+            
+            {/* 移动端已登录：账户图标 + 下拉 */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="btn-ghost flex sm:hidden w-10 h-10 rounded-lg items-center justify-center"
+                    aria-label="用户账户"
+                  >
+                    {isSyncing ? (
+                      <Cloud className="w-5 h-5 animate-pulse" />
+                    ) : (
+                      <User className="w-5 h-5" />
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[12rem]">
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      <span className="truncate">{user.email}</span>
+                    </div>
+                    {isSyncing && (
+                      <div className="flex items-center gap-2 mt-1 text-xs">
+                        <Cloud className="w-3 h-3 animate-pulse" />
+                        <span>同步中...</span>
+                      </div>
+                    )}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setIsListOpen(true)}>
+                    <List className="w-4 h-4 mr-2" />
+                    查看足迹列表
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    登出
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            
+            {/* 我的足迹按钮（桌面端） */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -522,6 +638,12 @@ const Index = () => {
       <WelcomeModal
         isOpen={isWelcomeOpen}
         onClose={handleCloseWelcome}
+      />
+
+      {/* 用户认证弹窗 */}
+      <AuthDialog
+        open={isAuthDialogOpen}
+        onOpenChange={setIsAuthDialogOpen}
       />
     </div>
   );
