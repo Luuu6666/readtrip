@@ -7,6 +7,10 @@ import { toast } from 'sonner';
 const STORAGE_KEY = 'readtrip_records';
 const SYNC_KEY = 'readtrip_synced';
 
+/** 阅读记录表名：本地默认 reading_records，线上可设 VITE_READING_TABLE=reading_records_online 区分 */
+const READING_TABLE: 'reading_records' | 'reading_records_online' =
+  (import.meta.env.VITE_READING_TABLE as 'reading_records' | 'reading_records_online') || 'reading_records';
+
 // 将ReadingRecord转换为数据库格式
 function recordToDb(record: ReadingRecord, userId: string) {
   return {
@@ -80,14 +84,17 @@ export function useReadingRecords() {
 
     try {
       const { data, error } = await supabase
-        .from('reading_records')
+        .from(READING_TABLE)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Failed to load from Supabase:', error);
-        toast.error('加载云端数据失败');
+        const msg = error.message?.includes('does not exist') || error.code === '42P01'
+          ? '加载云端数据失败：未检测到阅读记录表，请在当前 Supabase 项目的 SQL Editor 中执行建表脚本（见项目根目录 www.readtrip.club-云端保存失败排查.md）'
+          : '加载云端数据失败';
+        toast.error(msg);
         return [];
       }
 
@@ -134,7 +141,7 @@ export function useReadingRecords() {
       const recordsToInsert = localRecords.map(record => recordToDb(record, user.id));
       
       const { error } = await supabase
-        .from('reading_records')
+        .from(READING_TABLE)
         .insert(recordsToInsert);
 
       if (error) {
@@ -227,12 +234,15 @@ export function useReadingRecords() {
     if (user) {
       try {
         const { error } = await supabase
-          .from('reading_records')
+          .from(READING_TABLE)
           .insert([recordToDb(newRecord, user.id)]);
 
         if (error) {
           console.error('Failed to save to cloud:', error);
-          toast.error('保存到云端失败，已保存到本地');
+          const hint = error.message?.includes('does not exist') || error.code === '42P01'
+            ? '（当前 Supabase 项目可能未建表，请执行建表脚本）'
+            : '';
+          toast.error(`保存到云端失败，已保存到本地${hint}`);
         }
       } catch (error) {
         console.error('Failed to save to cloud:', error);
@@ -262,12 +272,15 @@ export function useReadingRecords() {
       try {
         const recordsToInsert = recordsWithIds.map(record => recordToDb(record, user.id));
         const { error } = await supabase
-          .from('reading_records')
+          .from(READING_TABLE)
           .insert(recordsToInsert);
 
         if (error) {
           console.error('Failed to save to cloud:', error);
-          toast.error('保存到云端失败，已保存到本地');
+          const hint = error.message?.includes('does not exist') || error.code === '42P01'
+            ? '（当前 Supabase 项目可能未建表，请执行建表脚本）'
+            : '';
+          toast.error(`保存到云端失败，已保存到本地${hint}`);
         } else {
           toast.success(`成功添加 ${recordsWithIds.length} 条记录`);
         }
@@ -292,7 +305,7 @@ export function useReadingRecords() {
     if (user) {
       try {
         const { error } = await supabase
-          .from('reading_records')
+          .from(READING_TABLE)
           .delete()
           .eq('id', id)
           .eq('user_id', user.id);
@@ -330,7 +343,7 @@ export function useReadingRecords() {
         const { id: _, created_at, ...updateData } = dbRecord;
 
         const { error } = await supabase
-          .from('reading_records')
+          .from(READING_TABLE)
           .update(updateData)
           .eq('id', id)
           .eq('user_id', user.id);
@@ -355,7 +368,7 @@ export function useReadingRecords() {
     if (user) {
       try {
         const { error } = await supabase
-          .from('reading_records')
+          .from(READING_TABLE)
           .delete()
           .eq('user_id', user.id);
 

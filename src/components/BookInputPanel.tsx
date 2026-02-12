@@ -74,19 +74,43 @@ export const BookInputPanel: React.FC<BookInputPanelProps> = ({
     setIsMatching(true);
     setMatchedBook(null);
 
-    try {
-      const { data, error } = await supabase.functions.invoke('match-book', {
+    const doInvoke = () =>
+      supabase.functions.invoke('match-book', {
         body: { bookTitle: bookTitle.trim() },
       });
 
+    try {
+      let result = await doInvoke();
+      // 冷启动时首次请求可能失败，重试一次
+      if (result.error && (result.error as { message?: string }).message?.includes('Failed to send a request')) {
+        await new Promise((r) => setTimeout(r, 2500));
+        result = await doInvoke();
+      }
+
+      const { data, error } = result;
+
       if (error) {
         console.error('Match book error:', error);
-        toast.error('匹配失败，请稍后重试');
+        const errAny = error as { message?: string };
+        let errorMsg = '匹配失败，请稍后重试';
+        if (errAny.message?.includes('Failed to send a request') || errAny.message?.includes('FunctionsFetchError')) {
+          errorMsg =
+            '无法连接到 AI 服务（请确认线上环境变量 VITE_SUPABASE_URL 与本地一致，且该 Supabase 项目已部署 match-book）';
+        } else if (errAny.message?.includes('FunctionsRelay') || errAny.message?.includes('404')) {
+          errorMsg = 'AI 服务未配置或未部署，请手动填写书名、作者、国家等信息后保存';
+        } else if (errAny.message) {
+          errorMsg = errAny.message;
+        }
+        toast.error(errorMsg);
         return;
       }
 
       if (data?.error) {
-        toast.error(data.error);
+        const serverMsg = String(data.error);
+        const hint = serverMsg.includes('未配置') || serverMsg.includes('不可用')
+          ? '请手动填写书名、作者、国家等信息后保存'
+          : serverMsg;
+        toast.error(hint);
         return;
       }
 
@@ -101,7 +125,7 @@ export const BookInputPanel: React.FC<BookInputPanelProps> = ({
       }
     } catch (err) {
       console.error('Match book exception:', err);
-      toast.error('网络错误，请检查连接');
+      toast.error('AI 服务暂时不可用，请手动填写书籍信息');
     } finally {
       setIsMatching(false);
     }

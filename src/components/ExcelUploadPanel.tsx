@@ -337,13 +337,16 @@ export const ExcelUploadPanel: React.FC<ExcelUploadPanelProps> = ({
         setImportedCount(successCount);
         setCurrentBookIndex(totalBooks); // 设置为总数，显示100%
         toast.success(`成功导入 ${successCount} 本书${errorCount > 0 ? `，${errorCount} 本失败` : ''}`);
+        if (errorCount > 0) {
+          toast.info('失败行多为缺少国家/国家代码且 AI 未配置。请确保 Excel 每行有书名、作者、国家或国家代码后重试。', { duration: 6000 });
+        }
         
         // 重置
         setTimeout(() => {
           handleClose();
         }, 2000);
       } else {
-        toast.error('没有成功导入任何书籍');
+        toast.error('没有成功导入任何书籍。请确保 Excel 每行包含书名、作者、国家或国家代码；若依赖 AI 匹配需在 Supabase 部署 match-book 并配置密钥。');
         setCurrentBookIndex(0);
       }
     } catch (error) {

@@ -61,6 +61,54 @@ export type Database = {
           updated_at?: string;
         };
       };
+      /** 线上环境用表，与 reading_records 结构相同，用于区分本地/线上 */
+      reading_records_online: {
+        Row: {
+          id: string;
+          user_id: string;
+          book_title: string;
+          book_author: string;
+          book_cover_url: string | null;
+          book_genre: string | null;
+          book_country: string;
+          book_country_code: string;
+          start_date: string | null;
+          end_date: string | null;
+          review: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          book_title: string;
+          book_author: string;
+          book_cover_url?: string | null;
+          book_genre?: string | null;
+          book_country: string;
+          book_country_code: string;
+          start_date?: string | null;
+          end_date?: string | null;
+          review?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          book_title?: string;
+          book_author?: string;
+          book_cover_url?: string | null;
+          book_genre?: string | null;
+          book_country?: string;
+          book_country_code?: string;
+          start_date?: string | null;
+          end_date?: string | null;
+          review?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     }
     Views: {
       [_ in never]: never
